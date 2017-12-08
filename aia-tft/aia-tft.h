@@ -1,6 +1,8 @@
 #define ucg_GetWidth(ucg) ((ucg)->dimension.w)
 #define ucg_GetHeight(ucg) ((ucg)->dimension.h)
 
+#define USE_PIN_LIST
+
 #define UCG_MSG_DEV_POWER_UP	10
 #define UCG_MSG_DEV_POWER_DOWN 11
 #define UCG_MSG_SET_CLIP_BOX 12
@@ -16,6 +18,8 @@
 /* draw  bit pattern with foreground (idx 1) and background (idx 0) color */
 //#define UCG_MSG_DRAW_L90BF 25	 /* can be commented, used by ucg_DrawBitmapLine */
 
+#include <Print.h>
+#include <Arduino.h>
 
 #define UCG_COM_STATUS_MASK_POWER 8
 #define UCG_COM_STATUS_MASK_RESET 4
@@ -108,6 +112,8 @@
 
 #define UCG_PIN_COUNT 13
 
+#define UCG_PIN_VAL_NONE 255
+
 #ifdef __GNUC__
 #  define UCG_NOINLINE __attribute__((noinline))
 #  define UCG_SECTION(name) __attribute__ ((section (name)))
@@ -163,6 +169,7 @@ typedef int16_t (*ucg_com_fnptr)(ucg_t *ucg, int16_t msg, uint16_t arg, uint8_t 
 typedef ucg_int_t (*ucg_font_calc_vref_fnptr)(ucg_t *ucg);
 
 ucg_int_t ucg_ext_none(ucg_t *ucg, ucg_int_t msg, void *data);
+ucg_int_t ucg_ext_st7735_18(ucg_t *ucg, ucg_int_t msg, void *data);
 //typedef ucg_int_t (*ucg_font_mode_fnptr)(ucg_t *ucg, ucg_int_t x, ucg_int_t y, uint8_t dir, uint8_t encoding);
 
 struct _ucg_font_decode_t
@@ -347,10 +354,288 @@ typedef struct _ucg_t
   
 } ugt_t;
 
+//ucg_int_t ucg_draw_transparent_glyph(ucg_t *ucg, ucg_int_t x, ucg_int_t y, uint8_t dir, uint8_t encoding);
+//ucg_int_t ucg_draw_solid_glyph(ucg_t *ucg, ucg_int_t x, ucg_int_t y, uint8_t dir, uint8_t encoding);
+
+// old font procedures
+//#define UCG_FONT_MODE_TRANSPARENT ucg_draw_transparent_glyph
+//#define UCG_FONT_MODE_SOLID ucg_draw_solid_glyph
+//#define UCG_FONT_MODE_NONE ((ucg_font_mode_fnptr)0)
+
+// new font procedures
+#define UCG_FONT_MODE_TRANSPARENT 1
+#define UCG_FONT_MODE_SOLID 0
+#define UCG_FONT_MODE_NONE 1
+
+
+/* Information on a specific given font */
+uint8_t ucg_font_GetFontStartEncoding(const void *font);
+uint8_t ucg_font_GetFontEndEncoding(const void *font);
+
+uint8_t ucg_font_GetCapitalAHeight(const void *font);
+
+int8_t ucg_font_GetFontAscent(const void *font);
+int8_t ucg_font_GetFontDescent(const void *font);
+
+int8_t ucg_font_GetFontXAscent(const void *font);
+int8_t ucg_font_GetFontXDescent(const void *font);
+
+size_t ucg_font_GetSize(const void *font);
+
+/* Information on the current font */
+
+uint8_t ucg_GetFontBBXWidth(ucg_t *ucg);
+uint8_t ucg_GetFontBBXHeight(ucg_t *ucg);
+uint8_t ucg_GetFontCapitalAHeight(ucg_t *ucg) UCG_NOINLINE; 
+uint8_t ucg_IsGlyph(ucg_t *ucg, uint8_t requested_encoding);
+int8_t ucg_GetGlyphWidth(ucg_t *ucg, uint8_t requested_encoding);
+
+#define ucg_GetFontAscent(ucg)	((ucg)->font_ref_ascent)
+#define ucg_GetFontDescent(ucg)	((ucg)->font_ref_descent)
+
+/* Drawing procedures */
+
+ucg_int_t ucg_DrawGlyph(ucg_t *ucg, ucg_int_t x, ucg_int_t y, uint8_t dir, uint8_t encoding);
+ucg_int_t ucg_DrawString(ucg_t *ucg, ucg_int_t x, ucg_int_t y, uint8_t dir, const char *str);
+
+/* Mode selection/Font assignment */
+
+void ucg_SetFontRefHeightText(ucg_t *ucg);
+void ucg_SetFontRefHeightExtendedText(ucg_t *ucg);
+void ucg_SetFontRefHeightAll(ucg_t *ucg);
+
+void ucg_SetFontPosBaseline(ucg_t *ucg) UCG_NOINLINE;
+void ucg_SetFontPosBottom(ucg_t *ucg);
+void ucg_SetFontPosTop(ucg_t *ucg);
+void ucg_SetFontPosCenter(ucg_t *ucg);
+
+void ucg_SetFont(ucg_t *ucg, const ucg_fntpgm_uint8_t  *font);
+//void ucg_SetFontMode(ucg_t *ucg, ucg_font_mode_fnptr font_mode);
+void ucg_SetFontMode(ucg_t *ucg, uint8_t is_transparent);
+
+ucg_int_t ucg_GetStrWidth(ucg_t *ucg, const char *s);
+
+/* ucg_pixel.c */
+void ucg_SetColor(ucg_t *ucg, uint8_t idx, uint8_t r, uint8_t g, uint8_t b);
+void ucg_DrawPixel(ucg_t *ucg, ucg_int_t x, ucg_int_t y);
+
+/* ucg_rotate.c */
+void ucg_UndoRotate(ucg_t *ucg);
+void ucg_SetRotate90(ucg_t *ucg);
+void ucg_SetRotate180(ucg_t *ucg);
+void ucg_SetRotate270(ucg_t *ucg);
+
+/* ucg_scale.c */
+void ucg_UndoScale(ucg_t *ucg);
+void ucg_SetScale2x2(ucg_t *ucg);
+
+/* ucg_dev_msg_api.c */
 void ucg_PowerDown(ucg_t *ucg);
 ucg_int_t ucg_PowerUp(ucg_t *ucg);
-void ucg_SetMaxClipRange(ucg_t *ucg);
 void ucg_SetClipBox(ucg_t *ucg, ucg_box_t *clip_box);
+void ucg_SetClipRange(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h);
+void ucg_SetMaxClipRange(ucg_t *ucg);
+void ucg_GetDimension(ucg_t *ucg);
+void ucg_DrawPixelWithArg(ucg_t *ucg);
+void ucg_DrawL90FXWithArg(ucg_t *ucg);
+void ucg_DrawL90TCWithArg(ucg_t *ucg);
+void ucg_DrawL90BFWithArg(ucg_t *ucg);
+void ucg_DrawL90SEWithArg(ucg_t *ucg);
+/* void ucg_DrawL90RLWithArg(ucg_t *ucg); */
+
+/* ucg_line.c */
+void ucg_Draw90Line(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t len, ucg_int_t dir, ucg_int_t col_idx);
+void ucg_DrawHLine(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t len);
+void ucg_DrawVLine(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t len);
+void ucg_DrawHRLine(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t len);
+void ucg_DrawLine(ucg_t *ucg, ucg_int_t x1, ucg_int_t y1, ucg_int_t x2, ucg_int_t y2);
+/* the following procedure is only available with the extended callback */
+void ucg_DrawGradientLine(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t len, ucg_int_t dir);
+
+/* ucg_box.c */
+void ucg_DrawBox(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h);
+void ucg_ClearScreen(ucg_t *ucg);
+void ucg_DrawRBox(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h, ucg_int_t r);
+void ucg_DrawGradientBox(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h);
+void ucg_DrawFrame(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h);
+void ucg_DrawRFrame(ucg_t *ucg, ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h, ucg_int_t r);
+
+/* ucg_ccs.c */
+void ucg_ccs_init(ucg_ccs_t *ccs, uint8_t start, uint8_t end, ucg_int_t steps);
+void ucg_ccs_step(ucg_ccs_t *ccs);
+void ucg_ccs_seek(ucg_ccs_t *ccs, ucg_int_t pos);
+
+/* ucg_circle.c */
+#define UCG_DRAW_UPPER_RIGHT 0x01
+#define UCG_DRAW_UPPER_LEFT  0x02
+#define UCG_DRAW_LOWER_LEFT 0x04
+#define UCG_DRAW_LOWER_RIGHT  0x08
+#define UCG_DRAW_ALL (UCG_DRAW_UPPER_RIGHT|UCG_DRAW_UPPER_LEFT|UCG_DRAW_LOWER_RIGHT|UCG_DRAW_LOWER_LEFT)
+void ucg_DrawDisc(ucg_t *ucg, ucg_int_t x0, ucg_int_t y0, ucg_int_t rad, uint8_t option);
+void ucg_DrawCircle(ucg_t *ucg, ucg_int_t x0, ucg_int_t y0, ucg_int_t rad, uint8_t option);
+
+/* ucg_polygon.c */
+
+typedef int16_t pg_word_t;
+
+#define PG_NOINLINE UCG_NOINLINE
+
+struct pg_point_struct
+{
+  pg_word_t x;
+  pg_word_t y;
+};
+
+typedef struct _pg_struct pg_struct;	/* forward declaration */
+
+struct pg_edge_struct
+{
+  pg_word_t x_direction;	/* 1, if x2 is greater than x1, -1 otherwise */
+  pg_word_t height;
+  pg_word_t current_x_offset;
+  pg_word_t error_offset;
+  
+  /* --- line loop --- */
+  pg_word_t current_y;
+  pg_word_t max_y;
+  pg_word_t current_x;
+  pg_word_t error;
+
+  /* --- outer loop --- */
+  uint8_t (*next_idx_fn)(pg_struct *pg, uint8_t i);
+  uint8_t curr_idx;
+};
+
+/* maximum number of points in the polygon */
+/* can be redefined, but highest possible value is 254 */
+#define PG_MAX_POINTS 4
+
+/* index numbers for the pge structures below */
+#define PG_LEFT 0
+#define PG_RIGHT 1
+
+
+struct _pg_struct
+{
+  struct pg_point_struct list[PG_MAX_POINTS];
+  uint8_t cnt;
+  uint8_t is_min_y_not_flat;
+  pg_word_t total_scan_line_cnt;
+  struct pg_edge_struct pge[2];	/* left and right line draw structures */
+};
+
+void pg_ClearPolygonXY(pg_struct *pg);
+void pg_AddPolygonXY(pg_struct *pg, ucg_t *ucg, int16_t x, int16_t y);
+void pg_DrawPolygon(pg_struct *pg, ucg_t *ucg);
+void ucg_ClearPolygonXY(void);
+void ucg_AddPolygonXY(ucg_t *ucg, int16_t x, int16_t y);
+void ucg_DrawPolygon(ucg_t *ucg);
+void ucg_DrawTriangle(ucg_t *ucg, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+
+void ucg_DrawTetragon(ucg_t *ucg, int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_t y3);
+
+// Do not use Ucglib class directly, use Ucglib8Bit or Ucglib4WireSPI instead
+class Ucglib : public Print
+{
+  protected:
+    ucg_t ucg;
+    ucg_dev_fnptr dev_cb;
+    ucg_dev_fnptr ext_cb;  
+  private:
+    ucg_int_t tx, ty;          // current position for the Print base class procedures
+    uint8_t tdir;
+  protected:
+    uint8_t& get_tdir(void) { return tdir; };
+    ucg_int_t& get_tx(void) { return tx; };
+    ucg_int_t& get_ty(void) { return ty; };
+    ucg_t *get_ucg(void) { return &ucg; };
+    void init(void);
+  public:
+    Ucglib(void) { init(); }
+    Ucglib(ucg_dev_fnptr dev, ucg_dev_fnptr ext = ucg_ext_none) { init(); dev_cb = dev; ext_cb = ext; }
+
+    void setPrintPos(ucg_int_t x, ucg_int_t y) { tx = x; ty = y; }
+    void setPrintDir(uint8_t dir) { tdir = dir; }
+    size_t write(uint8_t c);
+    ucg_t *getUcg(void) { return &ucg; }
+    
+    ucg_int_t getWidth(void) { return ucg_GetWidth(&ucg); }
+    ucg_int_t getHeight(void) { return ucg_GetHeight(&ucg); }
+    
+    
+    void setFontRefHeightText(void) 	{ ucg_SetFontRefHeightText(&ucg); }
+    void setFontRefHeightExtendedText(void) { ucg_SetFontRefHeightExtendedText(&ucg); }
+    void setFontRefHeightAll(void) 	{ ucg_SetFontRefHeightAll(&ucg); }
+
+    void setFontPosBaseline(void) 	{ ucg_SetFontPosBaseline(&ucg); }
+    void setFontPosBottom(void) 	{ ucg_SetFontPosBottom(&ucg); }
+    void setFontPosTop(void) 		{ ucg_SetFontPosTop(&ucg); }
+    void setFontPosCenter(void) 	{ ucg_SetFontPosCenter(&ucg); }
+    
+    void setFont(const ucg_fntpgm_uint8_t  *font)
+      { ucg_SetFont(&ucg, font); }
+    void setFontMode(uint8_t is_transparent) 
+      { ucg_SetFontMode(&ucg, is_transparent); }
+    ucg_int_t getFontAscent(void)
+      { return ucg_GetFontAscent(&ucg); }
+    ucg_int_t getFontDescent(void)
+      { return ucg_GetFontDescent(&ucg); }
+    ucg_int_t getStrWidth(const char *s)
+      { return ucg_GetStrWidth(&ucg, s); }
+    
+    void setColor(uint8_t idx, uint8_t r, uint8_t g, uint8_t b)
+      { ucg_SetColor(&ucg, idx, r, g, b); }
+    void setColor(uint8_t r, uint8_t g, uint8_t b)
+      { ucg_SetColor(&ucg, 0, r, g, b); }
+
+      
+    void undoRotate(void) { ucg_UndoRotate(&ucg); }
+    void setRotate90(void) { ucg_SetRotate90(&ucg); }
+    void setRotate180(void) { ucg_SetRotate180(&ucg); }
+    void setRotate270(void) { ucg_SetRotate270(&ucg); }
+
+    void undoScale(void) { ucg_UndoScale(&ucg); }
+    void setScale2x2(void) { ucg_SetScale2x2(&ucg); }
+    
+    void powerDown(void) { ucg_PowerDown(&ucg); }
+    void powerUp(void) { ucg_PowerUp(&ucg); }
+    
+    
+    
+    // Procedures, which are always available as part of the BASIC drawing procedure set
+      
+    void setClipRange(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h) { ucg_SetClipRange(&ucg, x,y,w,h); }
+    void setMaxClipRange(void) { ucg_SetMaxClipRange(&ucg); }
+    void undoClipRange(void) { ucg_SetMaxClipRange(&ucg); }
+
+    void drawPixel(ucg_int_t x, ucg_int_t y) { ucg_DrawPixel(&ucg, x, y); }    
+    void drawHLine(ucg_int_t x, ucg_int_t y, ucg_int_t len) { ucg_DrawHLine(&ucg, x, y, len); }
+    void drawVLine(ucg_int_t x, ucg_int_t y, ucg_int_t len) { ucg_DrawVLine(&ucg, x, y, len); }
+    void drawLine(ucg_int_t x1, ucg_int_t y1, ucg_int_t x2, ucg_int_t y2) { ucg_DrawLine(&ucg, x1, y1, x2, y2); }
+
+    ucg_int_t drawGlyph(ucg_int_t x, ucg_int_t y, uint8_t dir, uint8_t encoding) { return ucg_DrawGlyph(&ucg, x, y, dir, encoding); }
+    ucg_int_t drawString(ucg_int_t x, ucg_int_t y, uint8_t dir, const char *str) { return ucg_DrawString(&ucg, x, y, dir, str); }
+    
+    void drawBox(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h) { ucg_DrawBox(&ucg, x, y, w, h); }
+    void clearScreen(void) { ucg_ClearScreen(&ucg); }
+    void drawRBox(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h, ucg_int_t r) { ucg_DrawRBox(&ucg, x, y, w, h, r); }
+    
+    void drawFrame(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h) { ucg_DrawFrame(&ucg, x, y, w, h); }
+    void drawRFrame(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h, ucg_int_t r) { ucg_DrawRFrame(&ucg, x, y, w, h, r); }
+ 
+    void drawDisc(ucg_int_t x0, ucg_int_t y0, ucg_int_t rad, uint8_t option) { ucg_DrawDisc(&ucg, x0, y0, rad, option); }
+    void drawCircle(ucg_int_t x0, ucg_int_t y0, ucg_int_t rad, uint8_t option) { ucg_DrawCircle(&ucg, x0, y0, rad, option); }
+
+    void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2) { ucg_DrawTriangle(&ucg, x0, y0, x1, y1, x2, y2); }
+    /* the polygon procedure only works for convex tetragons (http://en.wikipedia.org/wiki/Convex_polygon) */
+    void drawTetragon(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_t y3) { ucg_DrawTetragon(&ucg, x0, y0, x1, y1, x2, y2, x3, y3); }
+    
+    // Procedures, which are only available with the EXTENDED option
+    
+    void drawGradientLine(ucg_int_t x, ucg_int_t y, ucg_int_t len, ucg_int_t dir) {ucg_DrawGradientLine(&ucg, x, y, len, dir); }
+    void drawGradientBox(ucg_int_t x, ucg_int_t y, ucg_int_t w, ucg_int_t h) { ucg_DrawGradientBox(&ucg, x, y, w, h); }
+};
+
 
 class Ucglib4WireHWSPI : public Ucglib
 {
@@ -373,6 +658,8 @@ class Ucglib4WireHWSPI : public Ucglib
     }
     void begin(uint8_t is_transparent);
 };
+
+ucg_int_t ucg_dev_st7735_18x128x128(ucg_t *ucg, ucg_int_t msg, void *data);
 
 class Ucglib_ST7735_18x128x128_HWSPI : public Ucglib4WireHWSPI
 {
