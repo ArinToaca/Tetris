@@ -1,167 +1,89 @@
-#include "aia-tft.h" 
+#include "aia-tft.h"
+#include <string.h> 	/* memset */
 
-static void ucg_com_arduino_init_shift_out(uint8_t dataPin, uint8_t clockPin)
+//initialize the ucg structure with default values
+void ucg_init_struct(ucg_t *ucg)
 {
-  u8g_outData = portOutputRegister(digitalPinToPort(dataPin));
-  u8g_outClock = portOutputRegister(digitalPinToPort(clockPin));
-  u8g_bitData = digitalPinToBitMask(dataPin);
-  u8g_bitClock = digitalPinToBitMask(clockPin);
+	//memset(ucg, 0, sizeof(ucg_t));
+	ucg->is_power_up = 0;
+	ucg->rotate_chain_device_cb = 0;
+	ucg->arg.scale = 1;
+	//ucg->display_offset.x = 0;
+	//ucg->display_offset.y = 0;
+	ucg->font = 0;
+	//ucg->font_mode = UCG_FONT_MODE_NONE;   Old font procedures
+	ucg->font_decode.is_transparent = 1;  // new font procedures
 
-  u8g_bitNotClock = u8g_bitClock;
-  u8g_bitNotClock ^= 0x0ff;
-
-  u8g_bitNotData = u8g_bitData;
-  u8g_bitNotData ^= 0x0ff;
+	ucg->com_initial_change_sent = 0;
+	ucg->com_status = 0;
+	ucg->com_cfg_cd = 0;
 }
 
-void aiaTft::powerUp(tft_t *tft)
+void ucg_SetFontPosBaseline(ucg_t *ucg)
 {
-	this->performOperation(tft, TFT_MSG_DEV_POWER_UP, NULL);
+  ucg->font_calc_vref = 0;
 }
 
-void aiaTft::powerDown(tft_t *tft)
+//power up display
+ucg_int_t ucg_PowerUp(ucg_t *ucg)
 {
-	if ( tft->is_power_up != 0 )
-	{
-		tft->device_cb(ucg, UCG_MSG_DEV_POWER_DOWN, NULL);
-		tft->is_power_up = 0;
-	}
-}
-
-//void ucg_com_SendCmdSeq(ucg_t *ucg, const ucg_pgm_uint8_t *data)
-void ucg_com_SendCmdSeq(ucg_t *ucg, const ucg_pgm_uint8_t *data)
-{
-  uint8_t b;
-  uint8_t bb;
-  uint8_t hi;
-  uint8_t lo;
-
-  for(;;)
+  ucg_int_t r;
+  /* power down first. will do nothing if power is already down */
+  ucg_PowerDown(ucg);
+  /* now try to power up the display */
+  r = ucg->device_cb(ucg, UCG_MSG_DEV_POWER_UP, NULL);
+  if ( r != 0 )
   {
-    b = ucg_pgm_read(data);
-    //b = *data;
-    hi = (b) >> 4;
-    lo = (b) & 0x0f;
-    switch( hi )
-    {
-      case 0:
-	return;		/* end marker */
-      case 1:
-      case 2:
-      case 3:
-	ucg_com_SendCmdArg(ucg, data+1, hi, lo);
-	data+=1+hi+lo;
-	break;
-      case 6:
-	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
-	ucg_com_SendStringP(ucg, lo, data+1);
-	data+=1+lo;      
-	break;
-      case 7:	/* note: 0x070 is used to set data line status */
-	ucg_com_SetCDLineStatus(ucg, ((ucg->com_cfg_cd>>1)&1)^1 );
-	if ( lo > 0 )
-	  ucg_com_SendStringP(ucg, lo, data+1);
-	data+=1+lo;      
-	break;
-      case 8:
-	data++;
-	b = ucg_pgm_read(data);
-	//b = *data;
-	ucg_com_DelayMilliseconds(ucg, (((uint16_t)lo)<<8) + b );
-	data++;
-	break;
-      case 9:
-	data++;
-	b = ucg_pgm_read(data);
-	//b = *data;
-	ucg_com_DelayMicroseconds(ucg, (((uint16_t)lo)<<8) + b );
-	data++;
-	break;
-      case 10:
-	data++;
-	b = ucg_pgm_read(data);
-	data++;
-	bb = ucg_pgm_read(data);
-	data++;
-	//b = data[0];
-	//bb = data[1];
-	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
-	ucg_com_SendByte(ucg, (((uint8_t)(((ucg->arg.pixel.pos.x)>>lo)))&b)|bb );
-	//data+=2;
-	break;
-      case 11:
-	data++;
-	b = ucg_pgm_read(data);
-	data++;
-	bb = ucg_pgm_read(data);
-	data++;
-	//b = data[0];
-	//bb = data[1];
-	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
-	ucg_com_SendByte(ucg, (((uint8_t)(((ucg->arg.pixel.pos.y)>>lo)))&b)|bb );
-	//data+=2;
-	break;
-      case 15:
-	hi = lo >> 2;
-	lo &= 3;
-	switch(hi)
-	{
-	  case 0:
-	    ucg_com_SetResetLineStatus(ucg, lo&1);
-	    break;
-	  case 1:
-	    ucg_com_SetCSLineStatus(ucg, lo&1);
-	    break;
-	  case 3:
-	    ucg->com_cfg_cd = lo;
-	    break;
-	}
-	data++;
-	break;
-      default:
-	return;
-    }  
+    ucg->is_power_up = 1;
+  }
+  return r;
+}
+
+//power down display
+void ucg_PowerDown(ucg_t *ucg)
+{
+  if ( ucg->is_power_up != 0 )
+  {
+    ucg->device_cb(ucg, UCG_MSG_DEV_POWER_DOWN, NULL);
+    ucg->is_power_up = 0;
   }
 }
 
-uint8_t performOperation(tft_t *tft, uint8_t msg, void *data)
+
+void ucg_GetDimension(ucg_t *ucg)
 {
-  switch(msg)
-  {
-    case TFT_MSG_DEV_POWER_UP:
-	  /* 1. Call to the controller procedures to setup the com interface */
-		#ifdef __AVR__
-			ucg_com_arduino_init_shift_out(ucg->pin_list[UCG_PIN_SDA], ucg->pin_list[UCG_PIN_SCL]);
-		#endif
+  ucg->device_cb(ucg, UCG_MSG_GET_DIMENSION, &(ucg->dimension));
+  ucg_SetMaxClipRange(ucg);
+}
 
-		pinMode(ucg->pin_list[UCG_PIN_CD], OUTPUT);
-		pinMode(ucg->pin_list[UCG_PIN_SDA], OUTPUT);
-		pinMode(ucg->pin_list[UCG_PIN_SCL], OUTPUT);
-		pinMode(ucg->pin_list[UCG_PIN_CS], OUTPUT);
-		pinMode(ucg->pin_list[UCG_PIN_RST], OUTPUT);
+void ucg_SetMaxClipRange(ucg_t *ucg)
+{
+  ucg_box_t new_clip_box;
+  new_clip_box.size = ucg->dimension;
+  new_clip_box.ul.x = 0;
+  new_clip_box.ul.y = 0;
+  ucg_SetClipBox(ucg, &new_clip_box);
+}
 
-		digitalWrite(ucg->pin_list[UCG_PIN_CD], 1);
-		digitalWrite(ucg->pin_list[UCG_PIN_SDA], 1);
-		digitalWrite(ucg->pin_list[UCG_PIN_SCL], 0);
-		digitalWrite(ucg->pin_list[UCG_PIN_CS], 1);
-		digitalWrite(ucg->pin_list[UCG_PIN_RST], 1);
-	return 0;
+void ucg_SetClipBox(ucg_t *ucg, ucg_box_t *clip_box)
+{
+  ucg->device_cb(ucg, UCG_MSG_SET_CLIP_BOX, (void *)(clip_box));
+}
 
-      /* 2. Send specific init sequence for this display module */
-      ucg_com_SendCmdSeq(ucg, ucg_tft_128x128_st7735_init_seq);
-      
-      return 1;
-      
-    case UCG_MSG_DEV_POWER_DOWN:
-      /* let do power down by the conroller procedures */
-      return ucg_dev_ic_st7735_18(ucg, msg, data);  
-    
-    case UCG_MSG_GET_DIMENSION:
-      ((ucg_wh_t *)data)->w = 128;
-      ((ucg_wh_t *)data)->h = 128;
-      return 1;
-  }
-  
-  /* all other messages are handled by the controller procedures */
-  return ucg_dev_ic_st7735_18(ucg, msg, data);  
+ucg_int_t ucg_Init(ucg_t *ucg, ucg_dev_fnptr device_cb, ucg_dev_fnptr ext_cb, ucg_com_fnptr com_cb)
+{
+	ucg_int_t r;
+	ucg_init_struct(ucg);
+
+	if ( ext_cb == (ucg_dev_fnptr)0 )
+		ucg->ext_cb = ucg_ext_none;
+	else 
+		ucg->ext_cb = ext_cb;
+
+	ucg->device_cb = device_cb;
+	ucg->com_cb = com_cb;
+	ucg_SetFontPosBaseline(ucg);
+	r = ucg_PowerUp(ucg);
+	ucg_GetDimension(ucg);
+	return r;
 }
