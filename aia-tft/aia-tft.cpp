@@ -28,7 +28,103 @@ void aiaTft::powerDown(tft_t *tft)
 	}
 }
 
-uint8_t aiaTft::performOperation(tft_t *tft, uint8_t msg, void *data)
+//void ucg_com_SendCmdSeq(ucg_t *ucg, const ucg_pgm_uint8_t *data)
+void ucg_com_SendCmdSeq(ucg_t *ucg, const ucg_pgm_uint8_t *data)
+{
+  uint8_t b;
+  uint8_t bb;
+  uint8_t hi;
+  uint8_t lo;
+
+  for(;;)
+  {
+    b = ucg_pgm_read(data);
+    //b = *data;
+    hi = (b) >> 4;
+    lo = (b) & 0x0f;
+    switch( hi )
+    {
+      case 0:
+	return;		/* end marker */
+      case 1:
+      case 2:
+      case 3:
+	ucg_com_SendCmdArg(ucg, data+1, hi, lo);
+	data+=1+hi+lo;
+	break;
+      case 6:
+	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
+	ucg_com_SendStringP(ucg, lo, data+1);
+	data+=1+lo;      
+	break;
+      case 7:	/* note: 0x070 is used to set data line status */
+	ucg_com_SetCDLineStatus(ucg, ((ucg->com_cfg_cd>>1)&1)^1 );
+	if ( lo > 0 )
+	  ucg_com_SendStringP(ucg, lo, data+1);
+	data+=1+lo;      
+	break;
+      case 8:
+	data++;
+	b = ucg_pgm_read(data);
+	//b = *data;
+	ucg_com_DelayMilliseconds(ucg, (((uint16_t)lo)<<8) + b );
+	data++;
+	break;
+      case 9:
+	data++;
+	b = ucg_pgm_read(data);
+	//b = *data;
+	ucg_com_DelayMicroseconds(ucg, (((uint16_t)lo)<<8) + b );
+	data++;
+	break;
+      case 10:
+	data++;
+	b = ucg_pgm_read(data);
+	data++;
+	bb = ucg_pgm_read(data);
+	data++;
+	//b = data[0];
+	//bb = data[1];
+	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
+	ucg_com_SendByte(ucg, (((uint8_t)(((ucg->arg.pixel.pos.x)>>lo)))&b)|bb );
+	//data+=2;
+	break;
+      case 11:
+	data++;
+	b = ucg_pgm_read(data);
+	data++;
+	bb = ucg_pgm_read(data);
+	data++;
+	//b = data[0];
+	//bb = data[1];
+	ucg_com_SetCDLineStatus(ucg, (ucg->com_cfg_cd)&1 );
+	ucg_com_SendByte(ucg, (((uint8_t)(((ucg->arg.pixel.pos.y)>>lo)))&b)|bb );
+	//data+=2;
+	break;
+      case 15:
+	hi = lo >> 2;
+	lo &= 3;
+	switch(hi)
+	{
+	  case 0:
+	    ucg_com_SetResetLineStatus(ucg, lo&1);
+	    break;
+	  case 1:
+	    ucg_com_SetCSLineStatus(ucg, lo&1);
+	    break;
+	  case 3:
+	    ucg->com_cfg_cd = lo;
+	    break;
+	}
+	data++;
+	break;
+      default:
+	return;
+    }  
+  }
+}
+
+uint8_t performOperation(tft_t *tft, uint8_t msg, void *data)
 {
   switch(msg)
   {
