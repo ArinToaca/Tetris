@@ -3,7 +3,7 @@
  #include "pins_arduino.h"
  #include "wiring_private.h"
  #include <SPI.h>
- 
+ #include "glcdfont.c"
 
  #define ST7735_TFTWIDTH  128
  #define ST7735_TFTHEIGHT 128
@@ -19,7 +19,21 @@
    static uint8_t mySPCR;
  #endif
  
+#ifndef pgm_read_byte
+    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+#endif
+#ifndef pgm_read_word
+    #define pgm_read_word(addr) (*(const unsigned short *)(addr))
+#endif
+#ifndef pgm_read_dword
+    #define pgm_read_dword(addr) (*(const unsigned long *)(addr))
+#endif 
  
+#ifndef _swap_int16_t
+    #define _swap_int16_t(a, b) { int16_t t = a; a = b; b = t; }
+#endif
+
+
  tzeny_tft::tzeny_tft(int8_t cs, int8_t dc, int8_t rst) {
     _width = ST7735_TFTWIDTH;
     _height = ST7735_TFTHEIGHT;
@@ -28,6 +42,7 @@
     _rst  = rst;
     hwSPI = true;
     _sid  = _sclk = -1;
+    _cp437    = false;
  }
  
  inline void tzeny_tft::spiwrite(uint8_t c) {
@@ -65,7 +80,6 @@
     }
  }
  
- 
  void tzeny_tft::writecommand(uint8_t c) {
     #if defined (SPI_HAS_TRANSACTION)
         if (hwSPI)    SPI.beginTransaction(mySPISettings);
@@ -80,7 +94,6 @@
         if (hwSPI)    SPI.endTransaction();
     #endif
  }
- 
  
  void tzeny_tft::writedata(uint8_t c) {
     #if defined (SPI_HAS_TRANSACTION)
@@ -376,9 +389,14 @@ int16_t tzeny_tft::height(){
 int16_t tzeny_tft::width(){
     return _width;
 }
- 
- 
+
+void tzeny_tft::setTextSize(uint8_t s) {
+    textsize = (s > 0) ? s : 1;
+}
+
+
 void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
+
  
     writecommand(ST7735_CASET); // Column addr set
     writedata(0x00);
@@ -394,7 +412,6 @@ void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
 
     writecommand(ST7735_RAMWR); // write to RAM
  }
- 
  
  void tzeny_tft::pushColor(uint16_t color) {
     #if defined (SPI_HAS_TRANSACTION)
@@ -432,7 +449,6 @@ void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
     if (hwSPI)     SPI.endTransaction();
     #endif
  }
- 
  
  void tzeny_tft::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
  
@@ -488,13 +504,9 @@ void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
  #endif
  }
  
- 
- 
  void tzeny_tft::fillScreen(uint16_t color) {
    fillRect(0, 0,  _width, _height, color);
  }
- 
- 
  
  // fill a rectangle
  void tzeny_tft::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
@@ -542,7 +554,6 @@ void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
  
  /******** low level bit twiddling **********/
  
- 
  inline void tzeny_tft::CS_HIGH(void) {
  #if defined(USE_FAST_IO)
    *csport |= cspinmask;
@@ -574,3 +585,179 @@ void tzeny_tft::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,uint8_t y1) {
    digitalWrite(_dc, LOW);
  #endif
  }
+
+ #if ARDUINO >= 100
+ size_t tzeny_tft::write(uint8_t c) {
+ #else
+ void tzeny_tft::write(uint8_t c) {
+ #endif
+ 
+    if(c == '\n') {                        // Newline?
+        cursor_x  = 0;                     // Reset x to zero,
+        cursor_y += textsize * 8;          // advance y one line
+    } else if(c != '\r') {                 // Ignore carriage returns
+        if(wrap && ((cursor_x + textsize * 6) > _width)) { // Off right?
+            cursor_x  = 0;                 // Reset x to zero,
+            cursor_y += textsize * 8;      // advance y one line
+        }
+        drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
+        cursor_x += textsize * 6;          // Advance x one char
+    }
+
+ #if ARDUINO >= 100
+     return 1;
+ #endif
+ }
+
+ void tzeny_tft::setTextColor(uint16_t c) {
+    // For 'transparent' background, we'll set the bg
+    // to the same as fg instead of using a flag
+    textcolor = textbgcolor = c;
+}
+
+void tzeny_tft::drawChar(int16_t x, int16_t y, unsigned char c,
+    uint16_t color, uint16_t bg, uint8_t size) {
+  
+    if((x >= _width)            || // Clip right
+        (y >= _height)           || // Clip bottom
+        ((x + 6 * size - 1) < 0) || // Clip left
+        ((y + 8 * size - 1) < 0))   // Clip top
+        return;
+
+    if(!_cp437 && (c >= 176)) c++; // Handle 'classic' charset behavior
+
+    startWrite();
+    for(int8_t i=0; i<5; i++ ) { // Char bitmap = 5 columns
+        uint8_t line = pgm_read_byte(&font[c * 5 + i]);
+        for(int8_t j=0; j<8; j++, line >>= 1) {
+            if(line & 1) {
+                if(size == 1)
+                    writePixel(x+i, y+j, color);
+                else
+                    writeFillRect(x+i*size, y+j*size, size, size, color);
+            } else if(bg != color) {
+                if(size == 1)
+                    writePixel(x+i, y+j, bg);
+                else
+                    writeFillRect(x+i*size, y+j*size, size, size, bg);
+            }
+        }
+    }
+    if(bg != color) { // If opaque, draw vertical line for last column
+        if(size == 1) writeFastVLine(x+5, y, 8, bg);
+        else          writeFillRect(x+5*size, y, size, 8*size, bg);
+    }
+    endWrite();
+
+  }
+
+void tzeny_tft::startWrite(){
+    // Overwrite in subclasses if desired!
+}
+
+void tzeny_tft::writePixel(int16_t x, int16_t y, uint16_t color){
+    // Overwrite in subclasses if startWrite is defined!
+    drawPixel(x, y, color);
+}
+
+void tzeny_tft::writeFastVLine(int16_t x, int16_t y,
+    int16_t h, uint16_t color) {
+// Overwrite in subclasses if startWrite is defined!
+// Can be just writeLine(x, y, x, y+h-1, color);
+// or writeFillRect(x, y, 1, h, color);
+drawFastVLine(x, y, h, color);
+}
+
+// (x,y) is leftmost point; if unsure, calling function
+// should sort endpoints or call writeLine() instead
+void tzeny_tft::writeFastHLine(int16_t x, int16_t y,
+    int16_t w, uint16_t color) {
+// Overwrite in subclasses if startWrite is defined!
+// Example: writeLine(x, y, x+w-1, y, color);
+// or writeFillRect(x, y, w, 1, color);
+drawFastHLine(x, y, w, color);
+}
+
+void tzeny_tft::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h,
+    uint16_t color) {
+// Overwrite in subclasses if desired!
+fillRect(x,y,w,h,color);
+}
+
+void tzeny_tft::endWrite(){
+// Overwrite in subclasses if startWrite is defined!
+}
+
+void tzeny_tft::setCursor(int16_t x, int16_t y) {
+    cursor_x = x;
+    cursor_y = y;
+}
+
+void tzeny_tft::writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+    uint16_t color) {
+    int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+    if (steep) {
+        _swap_int16_t(x0, y0);
+        _swap_int16_t(x1, y1);
+    }
+
+    if (x0 > x1) {
+        _swap_int16_t(x0, x1);
+        _swap_int16_t(y0, y1);
+    }
+
+    int16_t dx, dy;
+    dx = x1 - x0;
+    dy = abs(y1 - y0);
+
+    int16_t err = dx / 2;
+    int16_t ystep;
+
+    if (y0 < y1) {
+        ystep = 1;
+    } else {
+        ystep = -1;
+    }
+
+    for (; x0<=x1; x0++) {
+        if (steep) {
+            writePixel(y0, x0, color);
+        } else {
+            writePixel(x0, y0, color);
+        }
+        err -= dy;
+        if (err < 0) {
+            y0 += ystep;
+            err += dx;
+        }
+    }
+}
+
+void tzeny_tft::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,uint16_t color) {
+  if(x0 == x1){
+    if(y0 > y1) _swap_int16_t(y0, y1);
+    drawFastVLine(x0, y0, y1 - y0 + 1, color);
+  } else if(y0 == y1){
+    if(x0 > x1) _swap_int16_t(x0, x1);
+    drawFastHLine(x0, y0, x1 - x0 + 1, color);
+  } else {
+    startWrite();
+    writeLine(x0, y0, x1, y1, color);
+    endWrite();
+  }
+}
+
+void tzeny_tft::drawRect(int16_t x, int16_t y, int16_t w, int16_t h,uint16_t color) {
+  startWrite();
+  writeFastHLine(x, y, w, color);
+  writeFastHLine(x, y+h-1, w, color);
+  writeFastVLine(x, y, h, color);
+  writeFastVLine(x+w-1, y, h, color);
+  endWrite();
+}
+
+void tzeny_tft::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+  drawLine(x0, y0, x1, y1, color);
+  drawLine(x1, y1, x2, y2, color);
+  drawLine(x2, y2, x0, y0, color);
+}
