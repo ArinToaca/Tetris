@@ -1,6 +1,6 @@
 #include <tzeny-tft.h> // Hardware-specific library
 #include <SPI.h>
-
+#include <EEPROM.h>
 
 // For the breakout, you can use any 2 or 3 pins
 // These pins will also work for the 1.8" TFT shield
@@ -11,15 +11,17 @@
 
 #define blockSize 6
 
+#define max_highscores_number 8
+
 typedef struct _highscore_record
 {
     char player[7];
-    char score[7];
-    char level[3];
+    uint32_t score;
+    uint8_t level;
 }highscore_record;
 
 highscore_record highscores[8];
-uint8_t highscores_number = 1;
+uint8_t highscores_number = 0;
 
 tzeny_tft tft (TFT_CS,  TFT_DC, TFT_RST);
 
@@ -80,19 +82,30 @@ void drawHighscoreMenu()
 
   drawText(1,1,2,"HIGHSCORE");
 
+  drawText(3, 6, 1, "NAME   SCORE  LV", colors[5]);
+
   uint8_t i,j;
+  uint16_t color;
   char display_buffer[20];
+
+  Serial.print("I got this many highscores to display: ");
+  Serial.println(highscores_number);
+  
   for(i=0;i<highscores_number;i++)
   {
-    strcpy(display_buffer, highscores[i].player);
-    display_buffer[6] = ' ';
-    display_buffer[7] = '\0';
-    strcat(display_buffer, highscores[i].score);
-    display_buffer[13] = ' ';
-    display_buffer[14] = '\0';
-    strcat(display_buffer, highscores[i].level);
-    
-    drawText(3, i*2+6, 1, display_buffer, colors[i%colors_number]);
+    color = colors[i%(colors_number-1)];
+    drawText(3, i*2+8, 1, highscores[i].player, color);
+
+    //itoa(highscores[i].score, display_buffer, 10);
+    sprintf(display_buffer, "%lu", highscores[i].score);
+
+    drawText(10, i*2+8, 1, display_buffer, color);
+
+    //itoa(highscores[i].level, display_buffer, 10);
+    sprintf(display_buffer, "%d", highscores[i].level);
+
+    drawText(17, i*2+8, 1, display_buffer, color);
+    Serial.println(i);
   }
 
   current_menu_items = 3;
@@ -111,9 +124,81 @@ void drawRightSmallBlock(int xIndex, int yIndex, uint16_t color)
 
 void readHighscores()
 {
-  highscores[0] = (highscore_record) {"NAME  ", "SCORE ", "LV"};
-  highscores[1] = (highscore_record) {"ARINEL", "999999", "15"};
-  highscores_number = 2;
+  int eeprom_addr = 0;
+  uint8_t number_of_entries=0;
+
+  Serial.println("Reading highscores from EEPROM");
+
+  EEPROM.get(eeprom_addr, number_of_entries);
+  eeprom_addr += sizeof(uint8_t);
+
+  if(number_of_entries > max_highscores_number)
+    number_of_entries = max_highscores_number;
+  highscores_number = number_of_entries;
+
+  Serial.print("Number of entries: ");
+  Serial.println(highscores_number);
+
+  int i;
+  for(i=0;i<number_of_entries;i++)
+  {
+    EEPROM.get(eeprom_addr, highscores[i]);
+    eeprom_addr += sizeof(highscore_record);
+
+    Serial.print("Read entry for player: ");
+    Serial.println(highscores[i].player);
+  }
+  
+  Serial.println("Read all highscores!");
+}
+
+void sortHighscores()
+{
+  uint8_t sw = 1;
+  while(sw)
+  {
+    sw = 0;
+    uint8_t i;
+    highscore_record temp;
+    for(i=0;i<highscores_number-1;i++)
+    {
+      if(highscores[i].score<highscores[i+1].score)
+      {
+        temp = highscores[i];
+        highscores[i] = highscores[i+1];
+        highscores[i+1] = temp;
+
+        sw = 1;
+      }
+    }
+  }
+}
+
+void writeHighscores()
+{
+  Serial.println("Writing highscores to EEPROM");
+  
+  uint8_t eeprom_addr = 0;
+  
+  EEPROM.put(eeprom_addr, highscores_number);
+  eeprom_addr = sizeof(uint8_t);
+
+  delay(200);
+  
+  Serial.print("Number of entries: ");
+  Serial.println(highscores_number);
+
+  int i;
+  for(i=0;i<highscores_number;i++)
+  {
+    EEPROM.put(eeprom_addr, highscores[i]);
+    eeprom_addr += sizeof(highscore_record);
+
+    Serial.print("Wrote entry for player: ");
+    Serial.println(highscores[i].player);
+  }
+
+  Serial.println("Wrote all highscores!");
 }
 
 void setup(void) 
@@ -129,9 +214,18 @@ void setup(void)
 
   Serial.println("Initialized");
 
-  intro(ST7735_BLUE, ST7735_GREEN);
+  //intro(ST7735_BLUE, ST7735_GREEN);
 
   //delay(500);
+  //readHighscores();
+
+  /*highscores_number = 3;
+  highscores[0] = (highscore_record){"ARINEL",666969,13};
+  highscores[1] = (highscore_record){"BAIATU",1245,3};
+  highscores[2] = (highscore_record){"TZENY ",12634,6};
+  sortHighscores();
+  writeHighscores();*/
+
   readHighscores();
   
   drawHighscoreMenu();
@@ -188,6 +282,7 @@ void intro(uint16_t color1, uint16_t color2)
 
 void drawText(uint8_t xIndex, uint8_t yIndex, uint8_t textSize, char *msg, uint16_t color)
 {
+  Serial.print("Drawing text at position: ");Serial.print(xIndex);Serial.print("; ");Serial.print(yIndex);Serial.println("");
   tft.setCursor(blockSize*xIndex, blockSize*yIndex);
   tft.setTextColor(color);
   tft.setTextSize(textSize);
