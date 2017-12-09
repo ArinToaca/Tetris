@@ -18,7 +18,7 @@ void setup() {
   draw = new tzeny_draw();
   game = new tzeny_game(draw); 
   
-  game->display_title_menu();
+  game->start_game();
 }
 
 void loop() {

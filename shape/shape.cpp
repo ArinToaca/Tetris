@@ -1,12 +1,17 @@
 #include "shape.h"
 
-void shape::redrawShape()
+void shape::eraseShape()
 {
     int i;
     for(i=0; i<4;i++)
     {   
-        draw->clearBlock(p[i]->prev_x,p[i]->prev_y);
+        draw->clearBlock(p[i]->x,p[i]->y);
     }
+}
+
+void shape::drawShape()
+{
+    int i;
     for(i=0; i<4;i++)
     {   
         draw->drawBlock(p[i]->x,p[i]->y,color);
@@ -14,62 +19,111 @@ void shape::redrawShape()
 }
 
 void shape::moveShapeLeft(){
+    if(stopObject)
+        return;
+    eraseShape();
     int i;
-    if(stopLeftMovement == false){
-        stopRightMovement = false;
+    for(i = 0; i < 4; i++){
+        p[i]->prev_x = p[i]->x;
+        p[i]->x--;
+    }
+    checkCollision();
+    if(stopLeftMovement){
         for(i = 0; i < 4; i++){
-            p[i]->prev_x = p[i]->x;
-            p[i]->x--;
+            p[i]->x = p[i]->prev_x;
         }
     }
-    redrawShape();
-    checkCollision();
+    eraseShape();
+    drawShape();
 }
 
 void shape::moveShapeRight(){
-    if(stopRightMovement == false){
-       stopLeftMovement = false;
-    for(int i = 0; i < 4; i++){
+    if(stopObject)
+        return;
+    eraseShape();
+    int i;
+    for(i = 0; i < 4; i++){
         p[i]->prev_x = p[i]->x;
         p[i]->x++;
     }
-    }
-    redrawShape();
     checkCollision();
+    if(stopRightMovement){
+        for(i = 0; i < 4; i++){
+            p[i]->x = p[i]->prev_x;
+        }
+    }
+    eraseShape();
+    drawShape();
 };
 
-void shape::moveShapeDown(){
+bool shape::moveShapeDown(){
+    if(stopObject)
+        return true;
+    eraseShape();
     int i;
     for(i = 0;i < 4; i++) {
         p[i]->prev_y = p[i]->y;
         p[i]->y--;
     }
-    redrawShape();
     checkCollision();
-};
-void shape::checkPointCollision(int x, int y) {
-    //side collision
-    if( x == 0 || arr[x-1][y] ) { //left collision
-        stopLeftMovement = true;
+    if(stopObject){
+        for(i = 0; i < 4; i++){
+            p[i]->y = p[i]->prev_y;
+        }
     }
-    if( x == 10 || arr[x+1][y]){ //right collision
-        stopRightMovement = true;
-    }
-    //down collision, need to drop
-    if( y == 0 ||  arr[x][y-1] ){
-       stopObject = true;
-    }
-}
-void shape::checkCollision() { //called every movement left,right,down
-    stopObject = false;
-    int i;
-    for(i = 0; i < 4; i++){
-      checkPointCollision(p[i]->x,p[i]->y);
-        if(stopObject);
-         break;
-    }
+    eraseShape();
+    drawShape();
     if(stopObject){
         this->stopShape();
+        return false;
+    }
+
+    return true;
+};
+bool shape::checkArray(int x, int y)
+{
+    if(x<0 || x>9)
+        return false;
+    if(y<0 || y>19)
+        return false;
+
+    return arr[x][y];
+}
+
+bool shape::checkPointCollision(int x, int y) {
+
+    //side collision
+    if( x == -1 || checkArray(x,y) ) { //left collision
+        stopLeftMovement = true;
+    }
+    else
+    {
+        stopLeftMovement = false;
+    }
+    if( x == 10 ||  checkArray(x,y)){ //right collision
+        stopRightMovement = true;
+    }
+    else
+    {
+        stopRightMovement = false;
+    }
+    //down collision, need to drop
+    if( y == -1 || checkArray(x,y) ){
+       stopObject = true;
+    }
+    else{
+        stopObject = false;
+    }
+
+    Serial.println(String(stopObject)+String(stopLeftMovement)+String(stopRightMovement)+String(checkArray(x,y)));
+
+    return stopObject || stopLeftMovement || stopRightMovement;
+}
+bool shape::checkCollision() { //called every movement left,right,down
+    int i;
+    bool ret=false;;
+    for(i = 0; i < 4; i++){
+      ret = ret || checkPointCollision(p[i]->x,p[i]->y);
     }
 }
 void shape::stopShape() { //mark cells as occupied, destroy object
@@ -78,7 +132,7 @@ void shape::stopShape() { //mark cells as occupied, destroy object
         arr[p[i]->x][p[i]->y] = true;
     }
 
-    bool accum[3];
+    bool accum[4];
     for(j = 0; j < 20;j++){
         accum[0] &= arr[p[0]->x][j];
         accum[1] &= arr[p[1]->x][j];
@@ -86,7 +140,7 @@ void shape::stopShape() { //mark cells as occupied, destroy object
         accum[3] &= arr[p[3]->x][j];
     }
 
-    delete this;
+    //delete this;
 
 };
 

@@ -5,11 +5,11 @@ tzeny_game::tzeny_game(tzeny_draw *d)
     draw = d;
 
     int i,j;
-    for(i=0;i<MATRIX_HEIGHT;i++)
+    for(i=0;i<20;i++)
     {
-        for(j=0;j<MATRIX_WIDTH;j++)
+        for(j=0;j<10;j++)
         {
-            matrix[i][j] = false;
+            matrix[i][j] = 0;
         }
     }
 
@@ -21,7 +21,11 @@ void tzeny_game::start_game()
     system_state=1;
     draw->drawPlayArea();
 
-    s = new ShapeL();
+    s = new shapeL();
+    s->setDraw(draw);
+    s->startShape();
+
+    currentTicks=0;    
 }
 
 void tzeny_game::display_title_menu()
@@ -36,7 +40,21 @@ void tzeny_game::display_title_menu()
 
 void tzeny_game::game_tick()
 {
-    //draw->drawPlayArea();
+    if(system_state!=1)
+        return;
+    currentTicks++;
+    if(currentTicks==ticksToMove)
+    {
+        bool shapeOk = s->moveShapeDown();
+        if(!shapeOk)
+        {
+            delete s;
+            s = new shapeL();
+            s->setDraw(draw);
+            s->startShape();
+        }
+        currentTicks=0;
+    }
 }
 
 void tzeny_game::assign_buttons(uint8_t b1, uint8_t b2, uint8_t b3)
@@ -124,7 +142,7 @@ void tzeny_game::back_button_pressed()
 
 void tzeny_game::left_button_pressed() 
 {
-    Serial.println("LEFT State: " + String(system_state) + "; items: "+ String(current_menu_items) + ";arrow: " + String(current_menu_arrow_position));
+    //Serial.println("LEFT State: " + String(system_state) + "; items: "+ String(current_menu_items) + ";arrow: " + String(current_menu_arrow_position));
     switch(system_state)
     {
         case 0:
@@ -138,13 +156,15 @@ void tzeny_game::left_button_pressed()
                 }
             }
             break;
+        case 1:
+            s->moveShapeLeft();
     }
 
 }
 
 void tzeny_game::right_button_pressed() 
 {
-    Serial.println("RIGHT State: " + String(system_state) + "; items: "+ String(current_menu_items) + ";arrow: " + String(current_menu_arrow_position));
+    //Serial.println("RIGHT State: " + String(system_state) + "; items: "+ String(current_menu_items) + ";arrow: " + String(current_menu_arrow_position));
     switch(system_state)
     {
         case 0:
@@ -158,18 +178,23 @@ void tzeny_game::right_button_pressed()
                 }
             }
             break;
+        case 1:
+            s->moveShapeRight();
     }
   
 }
 
 void tzeny_game::top_button_pressed() 
 {
-  switch(system_state)
-  {
-    case 0:
-      if(current_menu!=-1)
-        menu_go_forward();
-      break;
-  }
+    switch(system_state)
+    {
+        case 0:
+            if(current_menu!=-1)
+                menu_go_forward();
+            break;
+
+        case 1:
+            s->rotateShape();
+    }
 
 }

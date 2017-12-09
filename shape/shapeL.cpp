@@ -1,13 +1,23 @@
 #include "shapeL.h"
 void shapeL::startShape(){
-    this->rotationPhase = 1;
+    this->rotationPhase = 2;
     p[0] = new point(4,19);
     p[1] = new point(5,19);
     p[2] = new point(4,18);
     p[3] = new point(4,17);
-    redrawShape();
+
+    int i,j;
+    for(i=0;i<20;i++)
+    {
+        for(j=0;j<10;j++)
+            arr[j][i]=0;
+    }
+
+    eraseShape();
+    drawShape();
 }
 void shapeL::rotateShape() {
+    eraseShape();
     int i;
     int interm_x[4];
     int interm_y[4];
@@ -24,7 +34,7 @@ void shapeL::rotateShape() {
             p[2]->y = p[0]->y - 1;
 
             p[3]->x = p[0]->x;
-            p[3]->x = p[0]->y - 2;
+            p[3]->y = p[0]->y - 2;
 
 
 
@@ -64,20 +74,24 @@ void shapeL::rotateShape() {
             break;
         }
     }
-    checkCollision(); //rotation does not make collision
-    if (stopObject){ //if it does collide, then revert, do not validate rotation.
+    bool collides = checkCollision(); //rotation does not make collision
+    Serial.println(String(collides));
+    if (collides)
+    { //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {
             p[i]->y = interm_y[i];
             p[i]->x = interm_x[i];
         }
-        stopObject=false;
-    }else{
+    }
+    else
+    {
+        rotationPhase = rotationPhase  % 4 + 1;
         for(i = 0;i < 4; i++) {
-            rotationPhase = (rotationPhase + 1) % 5;
-         p[i]->prev_y = interm_y[i];
-         p[i]->prev_x = interm_x[i];
+            p[i]->prev_y = interm_y[i];
+            p[i]->prev_x = interm_x[i];
         }
     }
-    redrawShape();
+    eraseShape();
+    drawShape();
 
 }

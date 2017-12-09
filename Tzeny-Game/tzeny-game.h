@@ -2,6 +2,7 @@
 #define __TZENY_GAME__
 #include <tzeny-draw.h>
 #include <shape.h>
+#include <shapeL.h>
 
 #define MATRIX_WIDTH        10
 #define MATRIX_HEIGHT       20
@@ -27,8 +28,10 @@ class tzeny_game {
         uint8_t current_menu_buttons[10];
         uint8_t system_state = 0;//0 - menu; 1 - game 
         bool gameStarted=false;
-        bool matrix[MATRIX_WIDTH][MATRIX_HEIGHT];
-        shape *s;
+        uint16_t matrix[20][10];
+        uint8_t ticksToMove=10;
+        uint8_t currentTicks=0;
+        shapeL *s;
         tzeny_draw *draw;
         int ticks_per_move_down=10;
 

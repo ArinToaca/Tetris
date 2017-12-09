@@ -34,9 +34,9 @@ public:
     point *p[4];
     bool arr[11][21];
     tzeny_draw *draw;
-    bool stopRightMovement;
-    bool stopLeftMovement;
-    bool stopObject;
+    bool stopRightMovement=false;
+    bool stopLeftMovement=false;
+    bool stopObject=false;
     uint16_t color=ST7735_BLUE;
     int rotationPhase;
 
@@ -48,15 +48,19 @@ public:
 
     void moveShapeRight();
 
-    void moveShapeDown();
+    bool moveShapeDown();
+
+    bool checkArray(int x, int y);
 
     void stopShape();
 
-    void redrawShape();
+    void eraseShape();
 
-    void checkCollision();
+    void drawShape();
 
-    void checkPointCollision(int x, int y);
+    bool checkCollision();
+
+    bool checkPointCollision(int x, int y);
 
     void delLines(int x[3]);
 };
