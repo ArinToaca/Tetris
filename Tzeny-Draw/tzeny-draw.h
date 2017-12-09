@@ -36,6 +36,7 @@ class tzeny_draw {
                 drawPlayMenu(),
                 drawHighscoreMenu(),
                 drawBlock(int xIndex, int yIndex, uint16_t color),
+                clearBlock(int xIndex, int yIndex),
                 drawRightSmallBlock(int xIndex, int yIndex, uint16_t color),
                 readHighscores(),
                 writeHighscores(),
@@ -48,8 +49,9 @@ class tzeny_draw {
                 left_button_pressed(),
                 right_button_pressed(),
                 top_button_pressed(),
-                initMenu();
-            
+                initMenu(),
+                startGame();
+        uint8_t system_state = 0;//0 - menu; 1 - game    
     private:
         tzeny_tft *tft;
         int hei,wid;

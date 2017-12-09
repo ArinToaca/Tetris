@@ -34,40 +34,63 @@ void tzeny_draw::test()
 //-----------------------EVENTS-------------------
 void tzeny_draw::back_button_pressed()
 {
-  if(current_menu!=-1)
-    menu_go_back();
+  switch(system_state)
+  {
+    case 0:
+      if(current_menu!=-1)
+        menu_go_back();
+      break;
+  }
 }
 
 void tzeny_draw::left_button_pressed() 
 {
-  if(current_menu_items!=0)
+  switch(system_state)
   {
-    if(current_menu_arrow_position>0)
-    {
-      drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
-      current_menu_arrow_position-=3;
-      drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
-    }
+    case 0:
+      if(current_menu_items!=0)
+      {
+        if(current_menu_arrow_position>0)
+        {
+          drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
+          current_menu_arrow_position-=3;
+          drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
+        }
+      }
+      break;
   }
+
 }
 
 void tzeny_draw::right_button_pressed() 
 {
-  if(current_menu_items!=0)
+  switch(system_state)
   {
-    if(current_menu_arrow_position<(current_menu_items-1)*3)
-    {
-      drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
-      current_menu_arrow_position+=3;
-      drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
-    }
+    case 0:
+      if(current_menu_items!=0)
+      {
+        if(current_menu_arrow_position<(current_menu_items-1)*3)
+        {
+          drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
+          current_menu_arrow_position+=3;
+          drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
+        }
+      }
+      break;
   }
+  
 }
 
 void tzeny_draw::top_button_pressed() 
 {
-  if(current_menu!=-1)
-    menu_go_forward();
+  switch(system_state)
+  {
+    case 0:
+      if(current_menu!=-1)
+        menu_go_forward();
+      break;
+  }
+
 }
 
 //------------------------SHAPES------------------
@@ -98,6 +121,7 @@ void tzeny_draw::intro(uint16_t color1, uint16_t color2)
 }
 
 void tzeny_draw::drawPlayArea() {
+    current_menu=-1;
     tft->fillScreen(ST7735_BLACK);
 
     Serial.println(blockSize*6);
@@ -110,6 +134,12 @@ void tzeny_draw::drawPlayArea() {
     tft->fillRect(blockSize*17, 0, blockSize, hei-1, ST7735_WHITE);
 }
 
+void tzeny_draw::startGame()
+{
+  system_state = 1;
+  drawPlayArea();
+}
+
 void tzeny_draw::drawMenuArrow(int yPos, uint16_t color)
 {
     tft->drawTriangle(blockSize, (yPos + 7) * blockSize, blockSize, (yPos + 7 + 2) * blockSize, blockSize*2, (yPos + 7 + 1) * blockSize, color);
@@ -118,6 +148,11 @@ void tzeny_draw::drawMenuArrow(int yPos, uint16_t color)
 void tzeny_draw::drawBlock(int xIndex, int yIndex, uint16_t color)
 {
     tft->fillRect(blockSize*7 + blockSize*xIndex, hei - blockSize*(yIndex+1), blockSize, blockSize, color);
+}
+
+void tzeny_draw::clearBlock(int xIndex, int yIndex)
+{
+    drawBlock(xIndex, yIndex, ST7735_BLACK);
 }
 
 void tzeny_draw::drawRightSmallBlock(int xIndex, int yIndex, uint16_t color)
@@ -163,13 +198,14 @@ void tzeny_draw::menu_go_forward()
 
     case 4:
       current_menu = -1;
-      drawPlayArea();
+      startGame();
       break;
   }
 }
 
 void tzeny_draw::initMenu()
 {
+  system_state = 0;
   tft->fillScreen(ST7735_BLACK);
   current_menu_arrow_position = 0;
 

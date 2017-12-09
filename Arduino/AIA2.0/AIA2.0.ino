@@ -9,12 +9,15 @@ volatile byte button_RIGHT = LOW;
 #define DEBOUNCE_TIMEOUT_MS   25
 
 tzeny_draw *draw;
+tzeny_game *game;
 
 void setup() {
   Serial.begin(9600);
   setup_interrupts();
   // put your setup code here, to run once:
   draw = new tzeny_draw();
+  game = new tzeny_game(draw);
+  draw->drawTitleMenu();
   
 }
 
@@ -25,7 +28,7 @@ void loop() {
 
 ISR(TIMER3_COMPA_vect)// interrupt service routine that wraps a user defined function supplied by attachInterrupt
 {
-  //Serial.println("Timer event!");
+  game->game_tick();
 }
 
 void setup_interrupts()
