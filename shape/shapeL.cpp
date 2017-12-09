@@ -1,6 +1,6 @@
 #include "shapeL.h"
 void shapeL::startShape(){
-    this->rotationPhase = 0;
+    this->rotationPhase = 1;
     p[0] = new point(4,19);
     p[1] = new point(5,19);
     p[2] = new point(4,18);
@@ -64,7 +64,7 @@ void shapeL::rotateShape() {
             break;
         }
     }
-    //this->checkCollision(); //rotation does not make collision
+    checkCollision(); //rotation does not make collision
     if (stopObject){ //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {
             p[i]->y = interm_y[i];

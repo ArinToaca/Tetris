@@ -9,7 +9,7 @@ void shapeT::startShape(){
     p[1] = new point(4,19);
     p[2] = new point(3,18);
     p[3] = new point(5,18);
-    this->rotationPhase = 0;
+    this->rotationPhase = 1;
 }
 void shapeT::rotateShape() {
     int i;

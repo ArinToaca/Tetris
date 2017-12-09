@@ -1,25 +1,5 @@
 #include "shape.h"
 
-
-void swap(int *xp, int *yp)
-{
-    int temp = *xp;
-    *xp = *yp;
-    *yp = temp;
-}
-
-// A function to implement bubble sort
-void bubbleSort(int arr[], int n)
-{
-    int i, j;
-    for (i = 0; i < n-1; i++)
-
-        // Last i elements are already in place
-        for (j = 0; j < n-i-1; j++)
-            if (arr[j] > arr[j+1])
-                swap(&arr[j], &arr[j+1]);
-}
-
 void shape::redrawShape()
 {
     int i;
@@ -35,23 +15,27 @@ void shape::redrawShape()
 
 void shape::moveShapeLeft(){
     int i;
-    stopRightMovement = false;
+    if(stopLeftMovement == false){
+        stopRightMovement = false;
         for(i = 0; i < 4; i++){
             p[i]->prev_x = p[i]->x;
             p[i]->x--;
         }
+    }
     redrawShape();
-    //checkCollision();
+    checkCollision();
 }
 
 void shape::moveShapeRight(){
-    stopLeftMovement = false;
+    if(stopRightMovement == false){
+       stopLeftMovement = false;
     for(int i = 0; i < 4; i++){
         p[i]->prev_x = p[i]->x;
         p[i]->x++;
     }
+    }
     redrawShape();
-    //checkCollision();
+    checkCollision();
 };
 
 void shape::moveShapeDown(){
@@ -61,18 +45,18 @@ void shape::moveShapeDown(){
         p[i]->y--;
     }
     redrawShape();
-    //checkCollision();
+    checkCollision();
 };
 void shape::checkPointCollision(int x, int y) {
     //side collision
-    if( x > 0 && arr[x-1][y]) { //left collision
+    if( x == 0 || arr[x-1][y] ) { //left collision
         stopLeftMovement = true;
     }
-    if( x > 0 && arr[x-1][y]){ //right collision
+    if( x == 10 || arr[x+1][y]){ //right collision
         stopRightMovement = true;
     }
     //down collision, need to drop
-    if( y > 0 ||  arr[x][y-1] ){
+    if( y == 0 ||  arr[x][y-1] ){
        stopObject = true;
     }
 }
@@ -88,20 +72,7 @@ void shape::checkCollision() { //called every movement left,right,down
         this->stopShape();
     }
 }
-void shape::delLines(int index[4]){
-    int i,j;
-
-
-    for(i = 3; i > 0;i--){
-        if(index[i] > 0) { //e valid, exista linie stearsa
-            for (j = 0; j < 3; j++) {
-                arr[index[i]][j] = arr[index[i] - 1][j];
-            }
-        }
-    }
-}
 void shape::stopShape() { //mark cells as occupied, destroy object
-    //ALSO CHECK IF COLLISION TRIGGERED A WIN!
     int i,j;
     for(i = 0; i < 4;i++){
         arr[p[i]->x][p[i]->y] = true;
@@ -114,19 +85,6 @@ void shape::stopShape() { //mark cells as occupied, destroy object
         accum[2] &= arr[p[2]->x][j];
         accum[3] &= arr[p[3]->x][j];
     }
-
-    int indexes[3];
-        for(i = 0;i < 3;i++){
-            indexes[i] = -1;
-        }
-    int counter = 0;
-    for(i = 0;i < 4;i++){
-        if (accum[i])
-            indexes[counter++] = p[i]->x;
-    }
-    bubbleSort(indexes,4);
-    delLines(indexes);
-
 
     delete this;
 
