@@ -5,10 +5,7 @@ void shapeL::startShape(){
     p[1] = new point(5,19);
     p[2] = new point(4,18);
     p[3] = new point(4,17);
-    drawPixel(p[0]);
-    drawPixel(p[1]);
-    drawPixel(p[2]);
-    drawPixel(p[3]);
+    redrawShape();
 }
 void shapeL::rotateShape() {
     int i;
@@ -75,9 +72,12 @@ void shapeL::rotateShape() {
         }
         stopObject=false;
     }else{
-        rotationPhase = (rotationPhase + 1) % 5;
+        for(i = 0;i < 4; i++) {
+            rotationPhase = (rotationPhase + 1) % 5;
          p[i]->prev_y = interm_y[i];
          p[i]->prev_x = interm_x[i];
+        }
     }
+    redrawShape();
 
 }

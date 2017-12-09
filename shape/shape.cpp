@@ -20,10 +20,17 @@ void bubbleSort(int arr[], int n)
                 swap(&arr[j], &arr[j+1]);
 }
 
-void shape::drawPixel(point* p)
+void shape::redrawShape()
 {
-    draw->clearBlock(p->prev_x,p->prev_y);
-    draw->drawBlock(p->x,p->y,color);
+    int i;
+    for(i=0; i<4;i++)
+    {   
+        draw->clearBlock(p[i]->prev_x,p[i]->prev_y);
+    }
+    for(i=0; i<4;i++)
+    {   
+        draw->drawBlock(p[i]->x,p[i]->y,color);
+    }
 }
 
 void shape::moveShapeLeft(){
@@ -32,9 +39,9 @@ void shape::moveShapeLeft(){
         for(i = 0; i < 4; i++){
             p[i]->prev_x = p[i]->x;
             p[i]->x--;
-            drawPixel(p[i]);
         }
-   // checkCollision();
+    redrawShape();
+    //checkCollision();
 }
 
 void shape::moveShapeRight(){
@@ -42,8 +49,8 @@ void shape::moveShapeRight(){
     for(int i = 0; i < 4; i++){
         p[i]->prev_x = p[i]->x;
         p[i]->x++;
-        drawPixel(p[i]);
     }
+    redrawShape();
     //checkCollision();
 };
 
@@ -52,8 +59,8 @@ void shape::moveShapeDown(){
     for(i = 0;i < 4; i++) {
         p[i]->prev_y = p[i]->y;
         p[i]->y--;
-        drawPixel(p[i]);
     }
+    redrawShape();
     //checkCollision();
 };
 void shape::checkPointCollision(int x, int y) {
@@ -89,10 +96,6 @@ void shape::delLines(int index[4]){
         if(index[i] > 0) { //e valid, exista linie stearsa
             for (j = 0; j < 3; j++) {
                 arr[index[i]][j] = arr[index[i] - 1][j];
-                point p(index[i],j);
-                p.prev_x = index[i]-1;
-                p.prev_y = j;
-                drawPixel(&p);
             }
         }
     }

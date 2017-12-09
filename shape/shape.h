@@ -1,5 +1,5 @@
- #ifndef __SHAPE_H_INCLUDED__
- #define __SHAPE_H_INCLUDED__
+#ifndef __SHAPE_H_INCLUDED__
+#define __SHAPE_H_INCLUDED__
 #include <Arduino.h>
 
 #define	ST7735_BLACK   0x0000
@@ -52,7 +52,7 @@ public:
 
     void stopShape();
 
-    void drawPixel(point* p);
+    void redrawShape();
 
     void checkCollision();
 

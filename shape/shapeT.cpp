@@ -73,7 +73,6 @@ void shapeT::rotateShape() {
         for(i = 0;i < 4; i++) {
             p[i]->y = interm_y[i];
             p[i]->x = interm_x[i];
-            drawPixel(p[i]);
         }
         stopObject=false;
     }else{
@@ -81,7 +80,6 @@ void shapeT::rotateShape() {
         for(i=0;i<4;i++){
             p[i]->prev_y = interm_y[i];
             p[i]->prev_x = interm_x[i];
-            drawPixel(p[i]);
         }
     }
     
