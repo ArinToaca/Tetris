@@ -9,7 +9,9 @@ void shapeT::startShape(){
     p[1] = new point(4,19);
     p[2] = new point(3,18);
     p[3] = new point(5,18);
-    this->rotationPhase = 1;
+    this->rotationPhase = 2;
+    eraseShape();
+    drawShape();
 }
 void shapeT::rotateShape() {
     int i;
@@ -68,20 +70,25 @@ void shapeT::rotateShape() {
             break;
         }
     }
-    this->checkCollision(); //rotation does not make collision
-    if (stopObject){ //if it does collide, then revert, do not validate rotation.
+    bool collides = checkCollision(); //rotation does not make collision
+    //Serial.println(String(collides));
+    if (collides)
+    { //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {
             p[i]->y = interm_y[i];
             p[i]->x = interm_x[i];
         }
-        stopObject=false;
-    }else{
-        rotationPhase = (rotationPhase + 1) % 5;
-        for(i=0;i<4;i++){
+    }
+    else
+    {
+        rotationPhase = rotationPhase  % 4 + 1;
+        for(i = 0;i < 4; i++) {
             p[i]->prev_y = interm_y[i];
             p[i]->prev_x = interm_x[i];
         }
     }
+    eraseShape();
+    drawShape();
     
     
 }

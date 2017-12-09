@@ -1,16 +1,16 @@
-#include "shapeL.h"
+#include "shapeMirrorL.h"
 
-void shapeL::startShape(){
+void shapeMirrorL::startShape(){
     this->rotationPhase = 2;
-    p[0] = new point(5,19);
-    p[1] = new point(4,19);
+    p[0] = new point(4,19);
+    p[1] = new point(5,19);
     p[2] = new point(6,19);
-    p[3] = new point(6,18);
-    this->rotationPhase = 2;
+    p[3] = new point(4,18);
+
     eraseShape();
     drawShape();
 }
-void shapeL::rotateShape() {
+void shapeMirrorL::rotateShape() {
     eraseShape();
     int i;
     int interm_x[4];
@@ -21,26 +21,28 @@ void shapeL::rotateShape() {
     }
     switch(rotationPhase){
         case 1: {
-            p[1]->x = p[0]->x - 1;
+            p[1]->x = p[0]->x -1 ;
             p[1]->y = p[0]->y;
 
             p[2]->x = p[0]->x + 1;
             p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x + 1;
+            p[3]->x = p[0]->x - 1;
             p[3]->y = p[0]->y - 1;
+
+
 
             break;
         }
         case 2: {
             p[1]->x = p[0]->x;
-            p[1]->y = p[0]->y - 1;
+            p[1]->y = p[0]->y + 1;
 
             p[2]->x = p[0]->x;
-            p[2]->y = p[0]->y + 1;
+            p[2]->y = p[0]->y - 1;
 
             p[3]->x = p[0]->x - 1;
-            p[3]->y = p[0]->y - 1;
+            p[3]->y = p[0]->y + 1;
             break;
         }
         case 3:{
@@ -50,24 +52,24 @@ void shapeL::rotateShape() {
             p[2]->x = p[0]->x + 1;
             p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x - 1;
+            p[3]->x = p[0]->x + 1;
             p[3]->y = p[0]->y + 1;
             break;
         }
         case 4:{
             p[1]->x = p[0]->x;
-            p[1]->y = p[0]->y + 1;
+            p[1]->y = p[0]->y - 1;
 
             p[2]->x = p[0]->x;
-            p[2]->y = p[0]->y - 1;
+            p[2]->y = p[0]->y + 1;
 
             p[3]->x = p[0]->x + 1;
-            p[3]->y = p[0]->y + 1;
+            p[3]->y = p[0]->y - 1;
             break;
         }
     }
     bool collides = checkCollision(); //rotation does not make collision
-    //Serial.println(String(collides));
+    Serial.println(String(collides));
     if (collides)
     { //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {

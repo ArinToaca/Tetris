@@ -1,5 +1,16 @@
 #include "shape.h"
 
+void shape::shape(int (&array)[10][20], uint16_t color) {
+    this->arr = array;
+    this->color = color;
+}
+
+
+
+
+
+
+
 void shape::eraseShape()
 {
     int i;
@@ -129,19 +140,8 @@ bool shape::checkCollision() { //called every movement left,right,down
 void shape::stopShape() { //mark cells as occupied, destroy object
     int i,j;
     for(i = 0; i < 4;i++){
-        arr[p[i]->x][p[i]->y] = true;
+        arr[p[i]->x][p[i]->y] = this->getColor();
     }
-
-    bool accum[4];
-    for(j = 0; j < 20;j++){
-        accum[0] &= arr[p[0]->x][j];
-        accum[1] &= arr[p[1]->x][j];
-        accum[2] &= arr[p[2]->x][j];
-        accum[3] &= arr[p[3]->x][j];
-    }
-
-    //delete this;
-
 };
 
 

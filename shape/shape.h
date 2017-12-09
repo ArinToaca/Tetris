@@ -16,6 +16,7 @@
 class shape {
 
 public:
+    shape();
     class point {
     public:
         int x, y, prev_x, prev_y;
@@ -32,7 +33,7 @@ public:
     };
 
     point *p[4];
-    bool arr[11][21];
+    uint16_t arr[][];
     tzeny_draw *draw;
     bool stopRightMovement=false;
     bool stopLeftMovement=false;
@@ -45,7 +46,10 @@ public:
     }
 
     void moveShapeLeft();
+    virtual void rotateShape();
+    virtual void startShape();
 
+    void getColor();
     void moveShapeRight();
 
     bool moveShapeDown();
