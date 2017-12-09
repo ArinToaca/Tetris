@@ -18,7 +18,7 @@ void setup() {
   setup_interrupts();
   // put your setup code here, to run once:
   draw = new tzeny_draw();
-  draw->drawPlayArea();
+  draw->drawTitleMenu();
   //draw->intro(ST7735_BLUE, ST7735_RED);
   s = new shapeL();
   s->setDraw(draw);

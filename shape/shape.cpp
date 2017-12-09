@@ -30,8 +30,8 @@ void shape::moveShapeLeft(){
     int i;
     stopRightMovement = false;
         for(i = 0; i < 4; i++){
-            p[i]->prev_y = p[i]->y;
-            p[i]->y--;
+            p[i]->prev_x = p[i]->x;
+            p[i]->x--;
             drawPixel(p[i]);
         }
    // checkCollision();
@@ -40,8 +40,8 @@ void shape::moveShapeLeft(){
 void shape::moveShapeRight(){
     stopLeftMovement = false;
     for(int i = 0; i < 4; i++){
-        p[i]->prev_y = p[i]->y;
-        p[i]->y--;
+        p[i]->prev_x = p[i]->x;
+        p[i]->x++;
         drawPixel(p[i]);
     }
     //checkCollision();
@@ -51,7 +51,7 @@ void shape::moveShapeDown(){
     int i;
     for(i = 0;i < 4; i++) {
         p[i]->prev_y = p[i]->y;
-        p[i]->x++;
+        p[i]->y--;
         drawPixel(p[i]);
     }
     //checkCollision();
