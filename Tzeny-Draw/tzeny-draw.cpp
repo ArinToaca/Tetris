@@ -13,8 +13,6 @@ tzeny_draw::tzeny_draw()
   hei = tft->height();
   wid = tft->width();
 
-  current_menu = -1;
-
   Serial.println("Initialized display");
 
 }
@@ -29,68 +27,6 @@ void tzeny_draw::test()
   writeHighscores();
 
   highscores_number = 0;
-}
-
-//-----------------------EVENTS-------------------
-void tzeny_draw::back_button_pressed()
-{
-  switch(system_state)
-  {
-    case 0:
-      if(current_menu!=-1)
-        menu_go_back();
-      break;
-  }
-}
-
-void tzeny_draw::left_button_pressed() 
-{
-  switch(system_state)
-  {
-    case 0:
-      if(current_menu_items!=0)
-      {
-        if(current_menu_arrow_position>0)
-        {
-          drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
-          current_menu_arrow_position-=3;
-          drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
-        }
-      }
-      break;
-  }
-
-}
-
-void tzeny_draw::right_button_pressed() 
-{
-  switch(system_state)
-  {
-    case 0:
-      if(current_menu_items!=0)
-      {
-        if(current_menu_arrow_position<(current_menu_items-1)*3)
-        {
-          drawMenuArrow(current_menu_arrow_position, ST7735_BLACK); //delete arrow
-          current_menu_arrow_position+=3;
-          drawMenuArrow(current_menu_arrow_position, ST7735_WHITE); //draw arrow
-        }
-      }
-      break;
-  }
-  
-}
-
-void tzeny_draw::top_button_pressed() 
-{
-  switch(system_state)
-  {
-    case 0:
-      if(current_menu!=-1)
-        menu_go_forward();
-      break;
-  }
-
 }
 
 //------------------------SHAPES------------------
@@ -121,7 +57,6 @@ void tzeny_draw::intro(uint16_t color1, uint16_t color2)
 }
 
 void tzeny_draw::drawPlayArea() {
-    current_menu=-1;
     tft->fillScreen(ST7735_BLACK);
 
     Serial.println(blockSize*6);
@@ -136,7 +71,6 @@ void tzeny_draw::drawPlayArea() {
 
 void tzeny_draw::startGame()
 {
-  system_state = 1;
   drawPlayArea();
 }
 
@@ -162,69 +96,17 @@ void tzeny_draw::drawRightSmallBlock(int xIndex, int yIndex, uint16_t color)
 }
 
 //-----------------------MENUS--------------------
-void tzeny_draw::menu_go_back()
-{
-  switch(current_menu)
-  {
-    case 1:
-      drawTitleMenu();
-      break;
-
-    case 2:
-      drawTitleMenu();
-      break;
-
-    case 3:
-      drawTitleMenu();
-      break;
-  }
-}
-
-void tzeny_draw::menu_go_forward()
-{
-  switch(current_menu_buttons[current_menu_arrow_position/3])
-  {
-    case 1:
-      drawTitleMenu();
-      break;
-
-    case 2:
-      drawHighscoreMenu();
-      break;
-
-    case 3:
-      drawPlayMenu();
-      break;
-
-    case 4:
-      current_menu = -1;
-      startGame();
-      break;
-  }
-}
-
 void tzeny_draw::initMenu()
 {
-  system_state = 0;
   tft->fillScreen(ST7735_BLACK);
-  current_menu_arrow_position = 0;
 
   if(current_menu_items!=0)
     drawMenuArrow(0, ST7735_WHITE);
 }
 
-void tzeny_draw::assign_buttons(uint8_t b1, uint8_t b2, uint8_t b3)
-{
-  current_menu_buttons[0] = b1;
-  current_menu_buttons[1] = b2;
-  current_menu_buttons[2] = b3;
-}
-
 void tzeny_draw::drawTitleMenu()
 {
   current_menu_items = 2;
-  current_menu = 1;
-  assign_buttons(3,2);
 
   initMenu();
 
@@ -237,8 +119,6 @@ void tzeny_draw::drawTitleMenu()
 void tzeny_draw::drawPlayMenu() 
 {
   current_menu_items = 3;
-  current_menu = 3;
-  assign_buttons(4,4,4);
 
   initMenu();
 
@@ -252,7 +132,6 @@ void tzeny_draw::drawPlayMenu()
 void tzeny_draw::drawHighscoreMenu()
 {
   current_menu_items = 0;
-  current_menu = 2;
 
   readHighscores();
 

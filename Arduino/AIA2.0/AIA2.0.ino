@@ -16,9 +16,9 @@ void setup() {
   setup_interrupts();
   // put your setup code here, to run once:
   draw = new tzeny_draw();
-  game = new tzeny_game(draw);
-  draw->drawTitleMenu();
+  game = new tzeny_game(draw); 
   
+  game->display_title_menu();
 }
 
 void loop() {
@@ -68,7 +68,7 @@ void button_down_interrupt() {
     button_DOWN = ~button_DOWN;
     if(button_DOWN)
     {
-      draw->back_button_pressed();
+      game->back_button_pressed();
     }
   }
   last_interrupt_time = interrupt_time;
@@ -83,7 +83,7 @@ void button_up_interrupt() {
     button_UP = ~button_UP;
     if(button_UP)
     {
-      draw->top_button_pressed();
+      game->top_button_pressed();
     }
   }
   last_interrupt_time = interrupt_time;
@@ -98,7 +98,7 @@ void button_left_interrupt() {
     button_LEFT = ~button_LEFT;
     if(button_LEFT)
     {
-      draw->left_button_pressed();
+      game->left_button_pressed();
     }
   }
   last_interrupt_time = interrupt_time;
@@ -112,7 +112,7 @@ void button_right_interrupt() {
     button_RIGHT = ~button_RIGHT;
     if(button_RIGHT)
     {
-      draw->right_button_pressed();
+      game->right_button_pressed();
     }
   }
   last_interrupt_time = interrupt_time;

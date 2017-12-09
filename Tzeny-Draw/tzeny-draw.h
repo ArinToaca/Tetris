@@ -32,7 +32,6 @@ class tzeny_draw {
                 drawPlayArea(),
                 drawMenuArrow(int yPos, uint16_t color),
                 drawTitleMenu(),
-                assign_buttons(uint8_t b1=1, uint8_t b2=1, uint8_t b3=1),
                 drawPlayMenu(),
                 drawHighscoreMenu(),
                 drawBlock(int xIndex, int yIndex, uint16_t color),
@@ -43,23 +42,13 @@ class tzeny_draw {
                 sortHighscores(),
                 intro(uint16_t color1, uint16_t color2),
                 test(),
-                menu_go_back(),
-                menu_go_forward(),
-                back_button_pressed(),
-                left_button_pressed(),
-                right_button_pressed(),
-                top_button_pressed(),
                 initMenu(),
-                startGame();
-        uint8_t system_state = 0;//0 - menu; 1 - game    
+                startGame();   
     private:
         tzeny_tft *tft;
         int hei,wid;
-        uint8_t current_menu_items = 1;
-        uint8_t current_menu = 0;
-        uint8_t current_menu_arrow_position = 0;
-        uint8_t current_menu_buttons[10];
         highscore_record highscores[8];
+        uint8_t current_menu_items = 1;
         uint8_t highscores_number = 0;
         
         //tzeny_tft tft (TFT_CS,  TFT_DC, TFT_RST);
