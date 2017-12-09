@@ -82,34 +82,61 @@
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
 
-class  tzeny_tft {
+class tzeny_tft : public Print {
     
     public:
     
-    tzeny_tft(int8_t CS, int8_t RS, int8_t RST = -1);
-    int16_t height(),
-            width();
+        tzeny_tft(int8_t CS, int8_t RS, int8_t RST = -1);
+        int16_t height(),
+                width();
 
-    void    initialize(),
-            setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
-            pushColor(uint16_t color),
-            fillScreen(uint16_t color),
-            drawPixel(int16_t x, int16_t y, uint16_t color),
-            drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
-            drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
-            fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                uint16_t color),
-            invertDisplay(boolean i);
-    uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
-    
+        void    initialize(),
+                setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
+                pushColor(uint16_t color),
+                fillScreen(uint16_t color),
+                drawPixel(int16_t x, int16_t y, uint16_t color),
+                drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
+                drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
+                fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
+                    uint16_t color),
+                setCursor(int16_t x, int16_t y),
+                setTextSize(uint8_t s) ,
+                drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color,
+                    uint16_t bg, uint8_t size),
+                invertDisplay(boolean i);
+        uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
+        
+        void setTextColor(uint16_t c);
+
+        #if ARDUINO >= 100
+            virtual size_t write(uint8_t);
+        #else
+            virtual void   write(uint8_t);
+        #endif
+
+        virtual void startWrite(void);
+        virtual void writePixel(int16_t x, int16_t y, uint16_t color);
+        virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+        virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+        virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+        virtual void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+        virtual void endWrite(void);
+
+        virtual void // Optional and probably not necessary to change
+            drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color),
+            drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
+            drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+
     private:
         int16_t
         _width, _height, // Display w/h as modified by current rotation
         cursor_x, cursor_y;    
-
+        uint8_t textsize;
+        boolean wrap;
+        uint16_t textcolor, textbgcolor;
     
     
-    void     spiwrite(uint8_t),
+    void    spiwrite(uint8_t),
             writecommand(uint8_t c),
             writedata(uint8_t d),
             commandList(const uint8_t *addr),
@@ -122,7 +149,7 @@ class  tzeny_tft {
     inline void DC_HIGH(void);
     inline void DC_LOW(void);
     
-    boolean  hwSPI;
+    boolean  hwSPI, _cp437;
 
     int8_t  _cs, _dc, _rst, _sid, _sclk;
     uint8_t colstart, rowstart, xstart, ystart; // some displays need this changed
