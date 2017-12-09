@@ -1,27 +1,45 @@
  #ifndef __SHAPE_H_INCLUDED__
  #define __SHAPE_H_INCLUDED__
-  
-  
-class shape{
-  
-  public:
-      class point{
-          public:
-          int x,y,prev_x,prev_y;
-          point(int x,int y){
-              this->x = x; 
-              this->y = y;
-          };
-          void drawPoint(){
-              //IMPLEMENT TZENY! :D
-          };
-      };
-      point *p[4];
-      void moveShapeLeft(int (&arr)[10][20] );
-      void moveShapeRight(int (&arr)[10][20] );
-      void moveShapeDown(int (&arr)[10][20] );
-      void stopShape(int (&arr)[10][20] );
- };
+#include <Arduino.h>
+class shape {
+
+public:
+    class point {
+    public:
+        int x, y, prev_x, prev_y;
+
+        point(int x, int y) {
+            this->x = x;
+            this->y = y;
+            prev_x = x;
+            prev_y = y;
+        };
+
+        void drawPoint() {
+        };
+    };
+
+    point *p[4];
+    bool arr[11][21];
+    bool stopRightMovement;
+    bool stopLeftMovement;
+    bool stopObject;
+    int rotationPhase;
+
+    void moveShapeLeft();
+
+    void moveShapeRight();
+
+    void moveShapeDown();
+
+    void stopShape();
+
+    void checkCollision();
+
+    void checkPointCollision(int x, int y);
+
+    void delLines(int x[3]);
+};
   
   #endif
 

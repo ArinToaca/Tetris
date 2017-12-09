@@ -1,12 +1,17 @@
-#include "shapeL.h"
-void shapeL::startShape(){
+//
+// Created by arin on 09.12.2017.
+//
+
+#include "shapeT.h"
+
+void shapeT::startShape(){
+    p[0] = new point(4,18);
+    p[1] = new point(4,19);
+    p[2] = new point(3,18);
+    p[3] = new point(5,18);
     this->rotationPhase = 0;
-    p[0] = new point(4,19);
-    p[1] = new point(5,19);
-    p[2] = new point(4,18);
-    p[3] = new point(4,17);
 }
-void shapeL::rotateShape() {
+void shapeT::rotateShape() {
     int i;
     int interm_x[4];
     int interm_y[4];
@@ -16,14 +21,14 @@ void shapeL::rotateShape() {
     }
     switch(rotationPhase){
         case 1: {
-            p[1]->x = p[0]->x + 1;
+            p[1]->x = p[0]->x - 1;
             p[1]->y = p[0]->y;
 
             p[2]->x = p[0]->x;
             p[2]->y = p[0]->y - 1;
 
             p[3]->x = p[0]->x;
-            p[3]->x = p[0]->y - 2;
+            p[3]->x = p[0]->y + 1;
 
 
 
@@ -33,33 +38,33 @@ void shapeL::rotateShape() {
             p[1]->x = p[0]->x;
             p[1]->y = p[0]->y - 1;
 
-            p[2]->x = p[0]->x - 1;
+            p[2]->x = p[0]->x + 1;
             p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x - 2;
+            p[3]->x = p[0]->x - 1;
             p[3]->y = p[0]->y;
             break;
         }
         case 3:{
-            p[1]->x = p[0]->x - 1;
+            p[1]->x = p[0]->x;
+            p[1]->y = p[0]->y - 1;
+
+            p[2]->x = p[0]->x + 1;
+            p[2]->y = p[0]->y;
+
+            p[3]->x = p[0]->x - 1;
+            p[3]->y = p[0]->y;
+            break;
+        }
+        case 4:{
+            p[1]->x = p[0]->x + 1;
             p[1]->y = p[0]->y;
 
             p[2]->x = p[0]->x;
             p[2]->y = p[0]->y + 1;
 
             p[3]->x = p[0]->x;
-            p[3]->y = p[0]->y + 2;
-            break;
-        }
-        case 4:{
-            p[1]->x = p[0]->x;
-            p[1]->y = p[0]->y + 1;
-
-            p[2]->x = p[0]->x + 1;
-            p[2]->y = p[0]->y;
-
-            p[3]->x = p[0]->x + 2;
-            p[3]->y = p[0]->y;
+            p[3]->y = p[0]->y - 1;
             break;
         }
     }
@@ -72,8 +77,7 @@ void shapeL::rotateShape() {
         stopObject=false;
     }else{
         rotationPhase = (rotationPhase + 1) % 5;
-         p[i]->prev_y = interm_y[i];
-         p[i]->prev_x = interm_x[i];
+        p[i]->prev_y = interm_y[i];
+        p[i]->prev_x = interm_x[i];
     }
-
 }
