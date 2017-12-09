@@ -4,8 +4,7 @@
 class shapeL : public shape {
   public:
      
-     void startShape(int (&arr)[10][20] );
-     void rotateShape(int (&arr)[10][20] ); 
-     void stopShape(int (&arr)[10][20] );
+     void startShape();
+     void rotateShape();
 };
 #endif
