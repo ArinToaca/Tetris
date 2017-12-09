@@ -85,7 +85,6 @@
 class tzeny_tft : public Print {
     
     public:
-    
         tzeny_tft(int8_t CS, int8_t RS, int8_t RST = -1);
         int16_t height(),
                 width();
