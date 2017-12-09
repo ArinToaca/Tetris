@@ -1,4 +1,6 @@
 #include <tzeny-draw.h>
+#include <shape.h>
+#include <shapeL.h>
 
 volatile byte button_DOWN = LOW;
 volatile byte button_UP = LOW;
@@ -9,14 +11,18 @@ volatile byte button_RIGHT = LOW;
 
 tzeny_draw *draw;
 
+shapeL *s;
+
 void setup() {
   Serial.begin(9600);
   setup_interrupts();
   // put your setup code here, to run once:
   draw = new tzeny_draw();
+  draw->drawPlayArea();
   //draw->intro(ST7735_BLUE, ST7735_RED);
-
-  draw->drawTitleMenu();
+  s = new shapeL();
+  s->setDraw(draw);
+  s->startShape();
 }
 
 void loop() {
@@ -82,6 +88,7 @@ void button_up_interrupt() {
     if(button_UP)
     {
       draw->top_button_pressed();
+      s->rotateShape();
     }
   }
   last_interrupt_time = interrupt_time;
@@ -97,6 +104,7 @@ void button_left_interrupt() {
     if(button_LEFT)
     {
       draw->left_button_pressed();
+      s->moveShapeLeft();
     }
   }
   last_interrupt_time = interrupt_time;
@@ -111,6 +119,7 @@ void button_right_interrupt() {
     if(button_RIGHT)
     {
       draw->right_button_pressed();
+      s->moveShapeRight();
     }
   }
   last_interrupt_time = interrupt_time;
