@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include "Ucglib.h"
 
-Ucglib_ST7735_18x128x160_SWSPI ucg(/*sclk=*/ 13, /*data=*/ 11, /*cd=*/ 9 , /*cs=*/ 10, /*reset=*/8);
+Ucglib_ST7735_18x128x128_HWSPI ucg(/*cd=*/ 9 , /*cs=*/ 10, /*reset=*/8);
 
 void setup(void)
 {

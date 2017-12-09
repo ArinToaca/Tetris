@@ -1,15 +1,21 @@
-#include <aia-tft.h>
+#include <SPI.h>
+#include "aia-tft.h"
 
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
+Ucglib_ST7735_18x128x128_HWSPI ucg(/*cd=*/ 9 , /*cs=*/ 10, /*reset=*/8);
 
-  aiaTft t = aiaTft();
-  int a = t.begin();
-  Serial.print(a);
+void setup(void)
+{
+  delay(1000);
+  ucg.begin(UCG_FONT_MODE_TRANSPARENT);
+  ucg.clearScreen();
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
+void loop(void)
+{
+  ucg.setRotate90();
+  ucg.setFont(ucg_font_ncenR14_tr);
+  ucg.setPrintPos(0,25);
+  ucg.setColor(255, 255, 255);
+  ucg.print("Hello World!");
+  delay(500);
 }
