@@ -3,7 +3,7 @@
 #include "shape.h"
 class shapeL : public shape {
   public:
-     
+     shapeL(uint16_t color);
      void startShape();
      void rotateShape();
 };

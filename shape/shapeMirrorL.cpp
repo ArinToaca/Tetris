@@ -1,24 +1,22 @@
-//
-// Created by arin on 09.12.2017.
-//
+#include "shapeMirrorL.h"
 
-#include "shapeT.h"
 
-shapeT::shapeT(uint16_t color) {
-    this->arr = array;
+
+shapeMirrorL::shapeMirrorL(uint16_t color) {
     this->color = color;
 }
-
-void shapeT::startShape(){
-    p[0] = new point(4,18);
-    p[1] = new point(4,19);
-    p[2] = new point(3,18);
-    p[3] = new point(5,18);
+void shapeMirrorL::startShape(){
     this->rotationPhase = 2;
+    p[0] = new point(4,19);
+    p[1] = new point(5,19);
+    p[2] = new point(6,19);
+    p[3] = new point(4,18);
+
     eraseShape();
     drawShape();
 }
-void shapeT::rotateShape() {
+void shapeMirrorL::rotateShape() {
+    eraseShape();
     int i;
     int interm_x[4];
     int interm_y[4];
@@ -28,14 +26,14 @@ void shapeT::rotateShape() {
     }
     switch(rotationPhase){
         case 1: {
-            p[1]->x = p[0]->x - 1;
+            p[1]->x = p[0]->x -1 ;
             p[1]->y = p[0]->y;
 
-            p[2]->x = p[0]->x;
-            p[2]->y = p[0]->y - 1;
+            p[2]->x = p[0]->x + 1;
+            p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x;
-            p[3]->x = p[0]->y + 1;
+            p[3]->x = p[0]->x - 1;
+            p[3]->y = p[0]->y - 1;
 
 
 
@@ -43,40 +41,40 @@ void shapeT::rotateShape() {
         }
         case 2: {
             p[1]->x = p[0]->x;
-            p[1]->y = p[0]->y - 1;
+            p[1]->y = p[0]->y + 1;
 
-            p[2]->x = p[0]->x + 1;
-            p[2]->y = p[0]->y;
+            p[2]->x = p[0]->x;
+            p[2]->y = p[0]->y - 1;
 
             p[3]->x = p[0]->x - 1;
-            p[3]->y = p[0]->y;
+            p[3]->y = p[0]->y + 1;
             break;
         }
         case 3:{
-            p[1]->x = p[0]->x;
-            p[1]->y = p[0]->y - 1;
+            p[1]->x = p[0]->x - 1;
+            p[1]->y = p[0]->y;
 
             p[2]->x = p[0]->x + 1;
             p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x - 1;
-            p[3]->y = p[0]->y;
+            p[3]->x = p[0]->x + 1;
+            p[3]->y = p[0]->y + 1;
             break;
         }
         case 4:{
-            p[1]->x = p[0]->x + 1;
-            p[1]->y = p[0]->y;
+            p[1]->x = p[0]->x;
+            p[1]->y = p[0]->y - 1;
 
             p[2]->x = p[0]->x;
             p[2]->y = p[0]->y + 1;
 
-            p[3]->x = p[0]->x;
+            p[3]->x = p[0]->x + 1;
             p[3]->y = p[0]->y - 1;
             break;
         }
     }
     bool collides = checkCollision(); //rotation does not make collision
-    //Serial.println(String(collides));
+    Serial.println(String(collides));
     if (collides)
     { //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {
@@ -94,6 +92,5 @@ void shapeT::rotateShape() {
     }
     eraseShape();
     drawShape();
-    
-    
+
 }

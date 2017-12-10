@@ -2,20 +2,18 @@
 
 void shape::eraseShape()
 {
-    int i;
-    for(i=0; i<4;i++)
+    /*for(i=0; i<4;i++)
     {   
         draw->clearBlock(p[i]->x,p[i]->y);
-    }
+    }*/
 }
 
 void shape::drawShape()
 {
-    int i;
-    for(i=0; i<4;i++)
+    /*for(i=0; i<4;i++)
     {   
         draw->drawBlock(p[i]->x,p[i]->y,color);
-    }
+    }*/
 }
 
 void shape::moveShapeLeft(){
@@ -87,7 +85,7 @@ bool shape::checkArray(int x, int y)
     if(y<0 || y>19)
         return false;
 
-    return arr[x][y];
+    return m.getValue(x,y);
 }
 
 bool shape::checkPointCollision(int x, int y) {
@@ -125,23 +123,13 @@ bool shape::checkCollision() { //called every movement left,right,down
     for(i = 0; i < 4; i++){
       ret = ret || checkPointCollision(p[i]->x,p[i]->y);
     }
+    return ret;
 }
 void shape::stopShape() { //mark cells as occupied, destroy object
     int i,j;
     for(i = 0; i < 4;i++){
-        arr[p[i]->x][p[i]->y] = true;
+        m.setValue(p[i]->x,p[i]->y,this->getColor());
     }
-
-    bool accum[4];
-    for(j = 0; j < 20;j++){
-        accum[0] &= arr[p[0]->x][j];
-        accum[1] &= arr[p[1]->x][j];
-        accum[2] &= arr[p[2]->x][j];
-        accum[3] &= arr[p[3]->x][j];
-    }
-
-    //delete this;
-
 };
 
 

@@ -1,7 +1,7 @@
 #ifndef __SHAPE_H_INCLUDED__
 #define __SHAPE_H_INCLUDED__
 #include <Arduino.h>
-
+#include "Matrix.h"
 #define	ST7735_BLACK   0x0000
 #define	ST7735_BLUE    0x001F
 #define	ST7735_RED     0xF800
@@ -11,11 +11,18 @@
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
 
-#include <tzeny-draw.h>
+//#include <tzeny-draw.h>
 
 class shape {
 
 public:
+    shape(uint16_t color):m(10,20){
+        this->color = color;
+    }
+    ~shape();
+    uint16_t getColor(){
+        return this->color;
+    }
     class point {
     public:
         int x, y, prev_x, prev_y;
@@ -30,19 +37,18 @@ public:
         void drawPoint() {
         };
     };
-
+    Matrix m;
     point *p[4];
-    bool arr[11][21];
-    tzeny_draw *draw;
+    //tzeny_draw *draw;
     bool stopRightMovement=false;
     bool stopLeftMovement=false;
     bool stopObject=false;
     uint16_t color=ST7735_BLUE;
     int rotationPhase;
 
-    void setDraw(tzeny_draw* d){
+    /*void setDraw(tzeny_draw* d){
         draw = d;
-    }
+    }*/
 
     void moveShapeLeft();
 
@@ -62,7 +68,6 @@ public:
 
     bool checkPointCollision(int x, int y);
 
-    void delLines(int x[3]);
 };
   
   #endif

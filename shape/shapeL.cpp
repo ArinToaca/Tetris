@@ -1,20 +1,16 @@
 #include "shapeL.h"
+
 void shapeL::startShape(){
     this->rotationPhase = 2;
-    p[0] = new point(4,19);
-    p[1] = new point(5,19);
-    p[2] = new point(4,18);
-    p[3] = new point(4,17);
-
-    int i,j;
-    for(i=0;i<20;i++)
-    {
-        for(j=0;j<10;j++)
-            arr[j][i]=0;
-    }
-
+    p[0] = new point(5,19);
+    p[1] = new point(4,19);
+    p[2] = new point(6,19);
+    p[3] = new point(6,18);
     eraseShape();
     drawShape();
+}
+shapeL::shapeL(uint16_t color) {
+    this->color = color;
 }
 void shapeL::rotateShape() {
     eraseShape();
@@ -27,16 +23,14 @@ void shapeL::rotateShape() {
     }
     switch(rotationPhase){
         case 1: {
-            p[1]->x = p[0]->x + 1;
+            p[1]->x = p[0]->x - 1;
             p[1]->y = p[0]->y;
 
-            p[2]->x = p[0]->x;
-            p[2]->y = p[0]->y - 1;
+            p[2]->x = p[0]->x + 1;
+            p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x;
-            p[3]->y = p[0]->y - 2;
-
-
+            p[3]->x = p[0]->x + 1;
+            p[3]->y = p[0]->y - 1;
 
             break;
         }
@@ -44,38 +38,38 @@ void shapeL::rotateShape() {
             p[1]->x = p[0]->x;
             p[1]->y = p[0]->y - 1;
 
-            p[2]->x = p[0]->x - 1;
-            p[2]->y = p[0]->y;
+            p[2]->x = p[0]->x;
+            p[2]->y = p[0]->y + 1;
 
-            p[3]->x = p[0]->x - 2;
-            p[3]->y = p[0]->y;
+            p[3]->x = p[0]->x - 1;
+            p[3]->y = p[0]->y - 1;
             break;
         }
         case 3:{
             p[1]->x = p[0]->x - 1;
             p[1]->y = p[0]->y;
 
-            p[2]->x = p[0]->x;
-            p[2]->y = p[0]->y + 1;
+            p[2]->x = p[0]->x + 1;
+            p[2]->y = p[0]->y;
 
-            p[3]->x = p[0]->x;
-            p[3]->y = p[0]->y + 2;
+            p[3]->x = p[0]->x - 1;
+            p[3]->y = p[0]->y + 1;
             break;
         }
         case 4:{
             p[1]->x = p[0]->x;
             p[1]->y = p[0]->y + 1;
 
-            p[2]->x = p[0]->x + 1;
-            p[2]->y = p[0]->y;
+            p[2]->x = p[0]->x;
+            p[2]->y = p[0]->y - 1;
 
-            p[3]->x = p[0]->x + 2;
-            p[3]->y = p[0]->y;
+            p[3]->x = p[0]->x + 1;
+            p[3]->y = p[0]->y + 1;
             break;
         }
     }
     bool collides = checkCollision(); //rotation does not make collision
-    Serial.println(String(collides));
+    //Serial.println(String(collides));
     if (collides)
     { //if it does collide, then revert, do not validate rotation.
         for(i = 0;i < 4; i++) {
