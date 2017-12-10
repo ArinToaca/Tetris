@@ -26,41 +26,41 @@ void loop() {
   
 }
 
-ISR(TIMER3_COMPA_vect)// interrupt service routine that wraps a user defined function supplied by attachInterrupt
+ISR(TIMER4_COMPA_vect)// interrupt service routine that wraps a user defined function supplied by attachInterrupt
 {
   game->game_tick();
+  //Serial.println("Tick!");
 }
 
 void setup_interrupts()
 {
   noInterrupts(); // disable all interrupts
-  TCCR3A = 0;
-  TCCR3B = 0;
+  TCCR4A = 0;
+  TCCR4B = 0;
 
-  OCR3A = 3125; //16 MHZ / 256 / 2HZ
-  TCNT3 = 0;
-  TCCR3B |= (1 << WGM12);
-  TCCR3B |= (1 << CS12); 
-  TIMSK3 |= (1 << OCIE3A); 
+  OCR4A = 3125; //16 MHZ / 256 / 2HZ
+  TCNT4 = 0;
+  TCCR4B |= (1 << WGM12);
+  TCCR4B |= (1 << CS12); 
+  TIMSK4 |= (1 << OCIE4A); 
   
   
   uint8_t i;
   pinMode(2, INPUT);
   pinMode(3, INPUT);
   pinMode(18, INPUT);
-  pinMode(20, INPUT);
+  pinMode(19, INPUT);
     
-  attachInterrupt(digitalPinToInterrupt(2), button_down_interrupt, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(3), button_up_interrupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), button_down_interrupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(19), button_up_interrupt, CHANGE);
   attachInterrupt(digitalPinToInterrupt(18), button_left_interrupt, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(20), button_right_interrupt, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(2), button_right_interrupt, CHANGE);
 
   interrupts(); 
   Serial.println("Installed interrupts!");
 }
 
 void button_down_interrupt() {
-  sei();
   static unsigned long last_interrupt_time=0;
   unsigned long interrupt_time = millis();
   if (interrupt_time - last_interrupt_time > DEBOUNCE_TIMEOUT_MS) 
@@ -70,12 +70,15 @@ void button_down_interrupt() {
     {
       game->back_button_pressed();
     }
+    else
+    {
+      game->back_button_released();
+    }
   }
   last_interrupt_time = interrupt_time;
 }
 
 void button_up_interrupt() {
-  sei();
   static unsigned long last_interrupt_time=0;
   unsigned long interrupt_time = millis();
   if (interrupt_time - last_interrupt_time > DEBOUNCE_TIMEOUT_MS) 
@@ -90,7 +93,6 @@ void button_up_interrupt() {
 }
 
 void button_left_interrupt() {
-  sei();
   static unsigned long last_interrupt_time=0;
   unsigned long interrupt_time = millis();
   if (interrupt_time - last_interrupt_time > DEBOUNCE_TIMEOUT_MS) 
@@ -104,7 +106,6 @@ void button_left_interrupt() {
   last_interrupt_time = interrupt_time;
 }
 void button_right_interrupt() {
-  sei();
   static unsigned long last_interrupt_time=0;
   unsigned long interrupt_time = millis();
   if (interrupt_time - last_interrupt_time > DEBOUNCE_TIMEOUT_MS) 
