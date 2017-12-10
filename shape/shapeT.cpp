@@ -4,6 +4,11 @@
 
 #include "shapeT.h"
 
+shapeT::shapeT(uint16_t color) {
+    this->arr = array;
+    this->color = color;
+}
+
 void shapeT::startShape(){
     p[0] = new point(4,18);
     p[1] = new point(4,19);

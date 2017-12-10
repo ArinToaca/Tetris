@@ -6,9 +6,11 @@ void shapeL::startShape(){
     p[1] = new point(4,19);
     p[2] = new point(6,19);
     p[3] = new point(6,18);
-    this->rotationPhase = 2;
     eraseShape();
     drawShape();
+}
+shapeL::shapeL(uint16_t color) {
+    this->color = color;
 }
 void shapeL::rotateShape() {
     eraseShape();

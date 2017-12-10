@@ -6,7 +6,7 @@
 #define SHAPE_SHAPEMIRRORZ_H
 class shapeMirrorZ : public shape {
 public:
-
+    shapeMirrorZ(uint16_t color);
     void startShape();
     void rotateShape();
 };

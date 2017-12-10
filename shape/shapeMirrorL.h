@@ -8,7 +8,7 @@
 #include "shape.h"
 class shapeMirrorL : public shape {
 public:
-
+    shapeMirrorL(uint16_t **array, uint16_t color);
     void startShape();
     void rotateShape();
 };

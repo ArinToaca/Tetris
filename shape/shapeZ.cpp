@@ -3,6 +3,11 @@
 //
 
 #include "shapeZ.h"
+void shapeZ::shapeZ(uint16_t color) {
+    this->color = color;
+}
+
+
 
 void shapeZ::startShape(){
     p[0] = new point(5,19);

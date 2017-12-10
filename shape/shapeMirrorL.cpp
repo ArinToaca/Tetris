@@ -1,5 +1,10 @@
 #include "shapeMirrorL.h"
 
+
+
+shapeMirrorL::shapeMirrorL(uint16_t color) {
+    this->color = color;
+}
 void shapeMirrorL::startShape(){
     this->rotationPhase = 2;
     p[0] = new point(4,19);

@@ -3,7 +3,10 @@
 //
 
 #include "shapeMirrorZ.h"
+shapeMirrorZ::shapeMirrorZ(uint16_t color) {
 
+    this->color = color;
+}
 void shapeMirrorZ::startShape(){
     p[0] = new point(5,19);
     p[1] = new point(4,19);

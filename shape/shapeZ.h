@@ -7,7 +7,7 @@
 #include "shape.h"
 class shapeZ : public shape {
 public:
-
+    shapeZ(uint16_t color);
     void startShape();
     void rotateShape();
 };

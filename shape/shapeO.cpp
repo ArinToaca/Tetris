@@ -3,7 +3,9 @@
 //
 
 #include "shapeO.h"
-
+shapeO::shapeO(uint16_t color) {
+    this->color = color;
+}
 void shapeO::rotateShape() {//oop LISKOV VIOLATION..., but O shape does not rotate
 }
 void shapeO::startShape() {

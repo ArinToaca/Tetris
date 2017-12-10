@@ -1,32 +1,19 @@
 #include "shape.h"
 
-void shape::shape(int (&array)[10][20], uint16_t color) {
-    this->arr = array;
-    this->color = color;
-}
-
-
-
-
-
-
-
 void shape::eraseShape()
 {
-    int i;
-    for(i=0; i<4;i++)
+    /*for(i=0; i<4;i++)
     {   
         draw->clearBlock(p[i]->x,p[i]->y);
-    }
+    }*/
 }
 
 void shape::drawShape()
 {
-    int i;
-    for(i=0; i<4;i++)
+    /*for(i=0; i<4;i++)
     {   
         draw->drawBlock(p[i]->x,p[i]->y,color);
-    }
+    }*/
 }
 
 void shape::moveShapeLeft(){
@@ -98,7 +85,7 @@ bool shape::checkArray(int x, int y)
     if(y<0 || y>19)
         return false;
 
-    return arr[x][y];
+    return m.getValue(x,y);
 }
 
 bool shape::checkPointCollision(int x, int y) {
@@ -136,11 +123,12 @@ bool shape::checkCollision() { //called every movement left,right,down
     for(i = 0; i < 4; i++){
       ret = ret || checkPointCollision(p[i]->x,p[i]->y);
     }
+    return ret;
 }
 void shape::stopShape() { //mark cells as occupied, destroy object
     int i,j;
     for(i = 0; i < 4;i++){
-        arr[p[i]->x][p[i]->y] = this->getColor();
+        m.setValue(p[i]->x,p[i]->y,this->getColor());
     }
 };
 
