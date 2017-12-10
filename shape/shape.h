@@ -33,7 +33,7 @@ public:
     };
 
     point *p[4];
-    uint16_t arr[][];
+    uint16_t arr[10][20];
     tzeny_draw *draw;
     bool stopRightMovement=false;
     bool stopLeftMovement=false;

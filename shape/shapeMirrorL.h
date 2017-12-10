@@ -6,7 +6,7 @@
 #define SHAPE_SHAPEMIRRORL_H
 
 #include "shape.h"
-class shapeL : public shape {
+class shapeMirrorL : public shape {
 public:
 
     void startShape();
